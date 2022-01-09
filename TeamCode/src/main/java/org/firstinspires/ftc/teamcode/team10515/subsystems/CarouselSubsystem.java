@@ -7,14 +7,10 @@ import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 public class CarouselSubsystem implements ISubsystem<CarouselStateMachine, CarouselStateMachine.State> {
     private static CarouselStateMachine carouselStateMachine;
     private RevMotor carousel;
-    private double kP = (1/5000d);
-    private double output = 0d;
 
-    public CarouselSubsystem(RevMotor carousel){//RevMotor leftFlywheel, RevMotor rightFlywheel) {
+    public CarouselSubsystem(RevMotor carousel){
         setCarouselStateMachine(new CarouselStateMachine());
         setCarousel(carousel);
-//        setLeftFlywheel(leftFlywheel);
-//        setRightFlywheel(rightFlywheel);
     }
 
     @Override
@@ -29,7 +25,6 @@ public class CarouselSubsystem implements ISubsystem<CarouselStateMachine, Carou
 
     @Override
     public void start() {
-
     }
 
     @Override
@@ -39,16 +34,12 @@ public class CarouselSubsystem implements ISubsystem<CarouselStateMachine, Carou
 
     @Override
     public void writeToTelemetry(Telemetry telemetry) {
-
     }
 
     @Override
     public void update(double dt) {
-        double error = getState().getSpeed() - getCarousel().getVelocity();
-        output = kP * error;
         getStateMachine().update(dt);
-        //getIntakeWheels().setPower(getState().getSpeed());
-        getCarousel().setPower(output);
+        getCarousel().setPower(getState().getSpeed());
     }
 
     @Override
@@ -58,10 +49,6 @@ public class CarouselSubsystem implements ISubsystem<CarouselStateMachine, Carou
 
     private static void setCarouselStateMachine(CarouselStateMachine carouselStateMachine) {
         CarouselSubsystem.carouselStateMachine = carouselStateMachine;
-    }
-
-    public double getOutput() {
-        return output;
     }
 
     private void setCarousel(RevMotor carousel){

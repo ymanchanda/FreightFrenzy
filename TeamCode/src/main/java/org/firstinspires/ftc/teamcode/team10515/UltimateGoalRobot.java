@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.team10515;
 
-import com.qualcomm.hardware.bosch.BNO055IMU;
-
 import org.firstinspires.ftc.teamcode.lib.drivers.Motor;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevMotor;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevServo;
@@ -12,7 +10,7 @@ import org.firstinspires.ftc.teamcode.team10515.subsystems.Drive;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.ExpansionHubs;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.FlickerSubsystem;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.ForkliftSubsystem2;
-import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeMotorSubsystem;
+import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeSubsystem;
 
 import org.firstinspires.ftc.teamcode.team10515.subsystems.RobotStateEstimator;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.ShooterSubsystem;
@@ -52,7 +50,7 @@ public abstract class UltimateGoalRobot extends Robot {
     private FlickerSubsystem flickerSubsystem;
     private ShooterSubsystem shooterMotors;
     private ForkliftSubsystem2 forkliftSubsystem;
-    private IntakeMotorSubsystem intakeMotorSubsystem;
+    private IntakeSubsystem intakeMotorSubsystem;
 
     @Override
     public void init() {
@@ -89,7 +87,7 @@ public abstract class UltimateGoalRobot extends Robot {
         //setElevatorSensor(hardwareMap.get(Rev2mDistanceSensor.class, "Elevator Sensor"));
         setDrive(new Drive(getRobotStateEstimator(), getMotors()[0], getMotors()[1], getMotors()[2], getMotors()[3]));
 
-        setIntakeMotorSubsystem(new IntakeMotorSubsystem(getMotors()[6]));
+        setIntakeMotorSubsystem(new IntakeSubsystem(getMotors()[6]));
         setForkliftSubsystem2(new ForkliftSubsystem2(getMotors()[7]));
 
         setMatchRuntime(new TimeProfiler(false));
@@ -175,11 +173,11 @@ public abstract class UltimateGoalRobot extends Robot {
         this.drive = drive;
     }
 
-    public IntakeMotorSubsystem getIntakeMotorSubsystem() {
+    public IntakeSubsystem getIntakeMotorSubsystem() {
         return intakeMotorSubsystem;
     }
 
-    public void setIntakeMotorSubsystem(IntakeMotorSubsystem intakeMotorSubsystem){
+    public void setIntakeMotorSubsystem(IntakeSubsystem intakeMotorSubsystem){
         this.intakeMotorSubsystem = intakeMotorSubsystem;
     }
 

@@ -2,14 +2,12 @@ package org.firstinspires.ftc.teamcode.team10515;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.lib.geometry.Pose2d;
 import org.firstinspires.ftc.teamcode.lib.geometry.Rotation2d;
-import org.firstinspires.ftc.teamcode.lib.util.TimeUnits;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperLeftStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperRightStateMachine;
-import org.firstinspires.ftc.teamcode.team10515.states.IntakeMotorStateMachine;
+import org.firstinspires.ftc.teamcode.team10515.states.IntakeStateMachine;
 
 /*
  * This {@code class} acts as the driver-controlled program for FTC team 10515 for the Skystone
@@ -72,10 +70,18 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         //Gamepad 1
 
         if(getEnhancedGamepad1().getLeft_trigger() > 0){
-            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
+            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.BLUE);
+            telemetry.addLine("Pad1 Left Trigger");
+
         }
         else if(getEnhancedGamepad1().getRight_trigger() > 0){
-            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.RUNNING);        }
+            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.RED);
+            telemetry.addLine("Pad1 Right Trigger");
+        }
+        else if(getEnhancedGamepad1().isBack()){
+            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
+            telemetry.addLine("Pad1 Back button");
+        }
 
         if(getEnhancedGamepad1().isX()){
             if(getDropperLeftSubsystem().getState() == DropperLeftStateMachine.State.PICKUP) {
@@ -98,22 +104,27 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         //Gamepad 2
 
         if(getEnhancedGamepad2().getLeft_trigger() > 0){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeMotorStateMachine.State.INTAKE);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
+            telemetry.addLine("Pad2 Left Trigger");
         }
         else if(getEnhancedGamepad2().getRight_trigger() > 0){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeMotorStateMachine.State.OUTTAKE);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.OUTTAKE);
+            telemetry.addLine("Pad2 Right Trigger");
         }
         else if(getEnhancedGamepad2().isBack()){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeMotorStateMachine.State.IDLE);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
+            telemetry.addLine("Pad2 Back button");
         }
 
         if(getEnhancedGamepad2().isA()){
             //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.DOWN);
+            telemetry.addLine("Pad2 a button");
         }
 
         //Check for Y button
         if(getEnhancedGamepad2().isY()){
             //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.UP);
+            telemetry.addLine("Pad2 y button");
         }
 
         //Check for DPad

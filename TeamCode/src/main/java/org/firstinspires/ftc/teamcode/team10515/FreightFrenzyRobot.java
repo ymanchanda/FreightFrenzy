@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.team10515.subsystems.DropperRightSubsystem
 import org.firstinspires.ftc.teamcode.team10515.subsystems.ExpansionHubs;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.FlickerSubsystem;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ForkliftSubsystem2;
-import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeMotorSubsystem;
+import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeSubsystem;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.RobotStateEstimator;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ShooterSubsystem;
@@ -53,7 +53,7 @@ public abstract class FreightFrenzyRobot extends Robot {
     //private FlickerSubsystem flickerSubsystem;
     //private ShooterSubsystem shooterMotors;
     private LiftSubsystem liftSubsystem;
-    private IntakeMotorSubsystem intakeMotorSubsystem;
+    private IntakeSubsystem intakeMotorSubsystem;
     private CarouselSubsystem carouselSubsystem;
     private DropperLeftSubsystem dropperLeftSubsystem;
     private DropperRightSubsystem dropperRightSubsystem;
@@ -68,15 +68,15 @@ public abstract class FreightFrenzyRobot extends Robot {
         );
 
         setMotors(new RevMotor[] {
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("LF")), true, true, true, true, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("LR")), true, true, true, true, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("RF")), false, true, true, false, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("RR")), false, true, true, false, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("LF")), true, true, true, false, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("LR")), true, true, true, false, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("RF")), false, true, true, true, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("RR")), false, true, true, true, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), getWheelDiameter(), 2d),
 
                 // the intake motor is 1150 rpm but it is giving error whenever I change it from 435 to 1150, so I am keeping it 435 for now
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("Intake")), true, false, false, false, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION(), 50.8, 2d),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("Intake")), true, false, false, false),//, Motor.GOBILDA_435_RPM.getENCODER_TICKS_PER_REVOLUTION()),// 50.8, 2d),
                 new RevMotor((ExpansionHubMotor)(hardwareMap.get("Lift")), true, true, true, false, Motor.GOBILDA_312_RPM.getENCODER_TICKS_PER_REVOLUTION()),
-                new RevMotor((ExpansionHubMotor)(hardwareMap.get("Carousel")), false, true, false, false, Motor.GOBILDA_312_RPM.getENCODER_TICKS_PER_REVOLUTION()),
+                new RevMotor((ExpansionHubMotor)(hardwareMap.get("Carousel")), false, false, true, false), //Motor.GOBILDA_312_RPM.getENCODER_TICKS_PER_REVOLUTION()),
         });
 
         setServos(new RevServo[] {
@@ -90,7 +90,7 @@ public abstract class FreightFrenzyRobot extends Robot {
         //setElevatorSensor(hardwareMap.get(Rev2mDistanceSensor.class, "Elevator Sensor"));
         setDrive(new Drive(getRobotStateEstimator(), getMotors()[0], getMotors()[1], getMotors()[2], getMotors()[3]));
         //setShooterSubsystem(new ShooterSubsystem(getMotors()[4], getMotors()[5]));
-        setIntakeMotorSubsystem(new IntakeMotorSubsystem(getMotors()[4]));
+        setIntakeMotorSubsystem(new IntakeSubsystem(getMotors()[4]));
         setLiftSubsystem(new LiftSubsystem(getMotors()[5]));
         setCarouselSubsystem(new CarouselSubsystem(getMotors()[6]));
 
@@ -121,14 +121,11 @@ public abstract class FreightFrenzyRobot extends Robot {
         getExpansionHubs().update(getDt());
         getDrive().update(getDt());
         getIntakeMotorSubsystem().update(getDt());
+        //getLiftSubsystem().update(getDt());
         getCarouselSubsystem().update(getDt());
+
         getDropperLeftSubsystem().update(getDt());
         getDropperRightSubsystem().update(getDt());
-        getLiftSubsystem().update(getDt());
-        //getFlickerSubsystem().update(getDt());
-       // getForkliftSubsystem2().update(getDt());
-
-
     }
 //        getEndGameExtensionSubsystem().update(getDt());
 //        if(getMatchRuntime().getDeltaTime(TimeUnits.SECONDS, false) >= 90d &&
@@ -187,11 +184,11 @@ public abstract class FreightFrenzyRobot extends Robot {
         this.drive = drive;
     }
 
-    public IntakeMotorSubsystem getIntakeMotorSubsystem() {
+    public IntakeSubsystem getIntakeMotorSubsystem() {
         return intakeMotorSubsystem;
     }
 
-    public void setIntakeMotorSubsystem(IntakeMotorSubsystem intakeMotorSubsystem){
+    public void setIntakeMotorSubsystem(IntakeSubsystem intakeMotorSubsystem){
         this.intakeMotorSubsystem = intakeMotorSubsystem;
     }
 
