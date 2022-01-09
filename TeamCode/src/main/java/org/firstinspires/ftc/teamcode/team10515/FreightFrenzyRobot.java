@@ -15,6 +15,7 @@ import org.firstinspires.ftc.teamcode.team10515.subsystems.ExpansionHubs;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.FlickerSubsystem;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ForkliftSubsystem2;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeMotorSubsystem;
+import org.firstinspires.ftc.teamcode.team10515.subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.RobotStateEstimator;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ShooterSubsystem;
 import org.openftc.revextensions2.ExpansionHubEx;
@@ -26,19 +27,19 @@ import java.util.Arrays;
 /**
  * Motor naming convention:
  *     Drivetrain
+ *         Front Left Wheel -> LF
+ *         Back Left Wheel   -> LR
+ *         Front Right Wheel -> RF
  *         Back Right Wheel  -> RR
- *         Back Left Wheel   -> RL
- *     Intake
- *         Left Flywheel  -> INL
- *         Right Flywheel -> INR
+  *     Intake
+ *         Intake Motor -> Intake
+ *      lift
+ *         Lift Motor -> Lift
  *     Outtake
- *         Left Extension  -> LL
- *         Right Extension -> LR
- * Servo naming convention:
- *     Outtake
- *
- *     End game
- *         Extension Blocker -> EXT
+ *         Left Arm Servo  -> Left
+ *         Right Arm Servo -> Right
+ *      Carousel
+ *          Carousel Motor -> Carousel
  * Misc. sensors naming convention:
 
  */
@@ -51,7 +52,7 @@ public abstract class FreightFrenzyRobot extends Robot {
     //private StackTracker stackTracker;
     //private FlickerSubsystem flickerSubsystem;
     //private ShooterSubsystem shooterMotors;
-    //private ForkliftSubsystem2 forkliftSubsystem;
+    private LiftSubsystem liftSubsystem;
     private IntakeMotorSubsystem intakeMotorSubsystem;
     private CarouselSubsystem carouselSubsystem;
     private DropperLeftSubsystem dropperLeftSubsystem;
@@ -90,6 +91,9 @@ public abstract class FreightFrenzyRobot extends Robot {
         setDrive(new Drive(getRobotStateEstimator(), getMotors()[0], getMotors()[1], getMotors()[2], getMotors()[3]));
         //setShooterSubsystem(new ShooterSubsystem(getMotors()[4], getMotors()[5]));
         setIntakeMotorSubsystem(new IntakeMotorSubsystem(getMotors()[4]));
+        setLiftSubsystem(new LiftSubsystem(getMotors()[5]));
+        setCarouselSubsystem(new CarouselSubsystem(getMotors()[6]));
+
         setDropperLeftSubsystem(new DropperLeftSubsystem(getServos()[0]));
         setDropperRightSubsystem(new DropperRightSubsystem(getServos()[0]));
   //      setForkliftSubsystem2(new ForkliftSubsystem2(getMotors()[7]));
@@ -120,7 +124,7 @@ public abstract class FreightFrenzyRobot extends Robot {
         getCarouselSubsystem().update(getDt());
         getDropperLeftSubsystem().update(getDt());
         getDropperRightSubsystem().update(getDt());
-        //getShooterSubsystem().update(getDt());
+        getLiftSubsystem().update(getDt());
         //getFlickerSubsystem().update(getDt());
        // getForkliftSubsystem2().update(getDt());
 
@@ -145,15 +149,18 @@ public abstract class FreightFrenzyRobot extends Robot {
         super.stop();
         getExpansionHubs().stop();
         //Yogesh Commented This
-      //  getRobotStateEstimator().stop();
+        //getRobotStateEstimator().stop();
         getDrive().stop();
-      //  getForkliftSubsystem2().stop();
-       //  getFlickerSubsystem().stop();
-       // getShooterSubsystem().stop();
+        //getForkliftSubsystem2().stop();
+        //getFlickerSubsystem().stop();
+        //getShooterSubsystem().stop();
         getIntakeMotorSubsystem().stop();
+        getLiftSubsystem().stop();
+        getCarouselSubsystem().stop();
+
         getDropperLeftSubsystem().stop();
         getDropperRightSubsystem().stop();
-        getCarouselSubsystem().stop();
+
     }
 
     public ExpansionHubs getExpansionHubs() {
@@ -187,6 +194,15 @@ public abstract class FreightFrenzyRobot extends Robot {
     public void setIntakeMotorSubsystem(IntakeMotorSubsystem intakeMotorSubsystem){
         this.intakeMotorSubsystem = intakeMotorSubsystem;
     }
+
+    public LiftSubsystem getLiftSubsystem() {
+        return liftSubsystem;
+    }
+
+    public void setLiftSubsystem(LiftSubsystem liftSubsystem){
+        this.liftSubsystem = liftSubsystem;
+    }
+
     public CarouselSubsystem getCarouselSubsystem() {
         return carouselSubsystem;
     }

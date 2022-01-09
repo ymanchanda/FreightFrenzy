@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.team10515;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.team10515.auto.UGBase;
 
 @TeleOp
+@Disabled
 public class TeleOp1 extends UGBase {
     @Override
     public void runOpMode() throws InterruptedException {

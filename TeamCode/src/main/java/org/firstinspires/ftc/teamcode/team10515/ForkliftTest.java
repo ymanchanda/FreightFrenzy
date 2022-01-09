@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.team10515;
 import static org.firstinspires.ftc.teamcode.team10515.Robot.getEnhancedGamepad1;
 import static org.firstinspires.ftc.teamcode.team10515.Robot.setEnhancedGamepad1;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -10,7 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.team10515.control.EnhancedGamepad;
 
 @TeleOp(name = "Wobble Goal/Servo Test", group = "Test")
-
+@Disabled
 public class ForkliftTest extends OpMode {
     public double servoPos = 0;
 

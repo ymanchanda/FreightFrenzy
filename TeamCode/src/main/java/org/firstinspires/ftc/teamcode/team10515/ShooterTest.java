@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.team10515;
 import static org.firstinspires.ftc.teamcode.team10515.Robot.setEnhancedGamepad1;
 import static java.lang.System.currentTimeMillis;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -11,8 +12,7 @@ import org.firstinspires.ftc.teamcode.team10515.control.EnhancedGamepad;
 import org.firstinspires.ftc.teamcode.team10515.control.ShooterPhysics;
 
 
-@TeleOp(name = "Shooter Test", group = "Test")
-
+@TeleOp(name = "Carousel Test", group = "Test")
 public class ShooterTest extends OpMode{
     public double shooterSpeed = 0;
     public boolean moveShooter = false;
