@@ -80,8 +80,8 @@ public abstract class FreightFrenzyRobot extends Robot {
 
         setServos(new RevServo[] {
                 //new RevServo((ExpansionHubServo)(hardwareMap.get("Elevator Servo"))),
-                new RevServo((ExpansionHubServo)(hardwareMap.get("Dropper Left"))),
-                new RevServo((ExpansionHubServo)(hardwareMap.get("Dropper Right")))
+                new RevServo((ExpansionHubServo)(hardwareMap.get("Left"))),
+                new RevServo((ExpansionHubServo)(hardwareMap.get("Right")))
 
         });
 
