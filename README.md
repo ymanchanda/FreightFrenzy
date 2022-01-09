@@ -874,7 +874,6 @@ Changes include:
      - Fixed toolbox entry for openGLMatrix_rotation_withAxesArgs.
      - When user downloads Blocks-generated op mode, only the .blk file is downloaded.
      - When user uploads Blocks-generated op mode (.blk file), Javascript code is auto generated.
-     - Added DbgLog support.
      - Added logging when a blocks file is read/written.
      - Fixed bug to properly render blocks even if missing devices from configuration file.
      - Added support for additional characters (not just alphanumeric) for the block file names (for download and upload).
@@ -1049,7 +1048,6 @@ Changes include:
  * apps check for ROBOCOL_VERSION mismatch
  * Fix for Telemetry also has off-by-one errors in its data string sizing / short size limitations error
  * User telemetry output is sorted.
- * added formatting variants to DbgLog and RobotLog APIs
  * code modified to allow for a long list of op mode names.
  * changes to improve thread safety of RobocolDatagramSocket
  * Fix for "missing hardware leaves robot controller disconnected from driver station" error
