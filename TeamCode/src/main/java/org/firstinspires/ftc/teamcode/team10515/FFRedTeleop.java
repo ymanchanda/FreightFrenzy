@@ -132,12 +132,12 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         }
 
         if(getEnhancedGamepad2().isaJustPressed()){
-            //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.DOWN);
+            getLiftSubsystem().retract();
             telemetry.addLine("Lift Down");
         }
 
         if(getEnhancedGamepad2().isyJustPressed()){
-            //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.UP);
+            getLiftSubsystem().extend();
             telemetry.addLine("Lift Up");
         }
 

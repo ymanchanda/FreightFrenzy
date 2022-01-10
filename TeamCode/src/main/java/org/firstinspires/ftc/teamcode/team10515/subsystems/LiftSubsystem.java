@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.team10515.subsystems;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.lib.annotations.PIDSVA;
 import org.firstinspires.ftc.teamcode.lib.control.ControlConstants;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevMotor;
 import org.firstinspires.ftc.teamcode.lib.motion.IMotionProfile;
 import org.firstinspires.ftc.teamcode.lib.motion.ResidualVibrationReductionMotionProfilerGenerator;
-import org.firstinspires.ftc.teamcode.lib.util.Time;
 import org.firstinspires.ftc.teamcode.lib.util.TimeProfiler;
 import org.firstinspires.ftc.teamcode.lib.util.TimeUnits;
 import org.firstinspires.ftc.teamcode.team10515.states.LiftStateMachine;
@@ -34,15 +32,10 @@ import java.util.function.DoubleSupplier;
         A = 0d
 )
 public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMachine.State> {
-    private static final Time STONE_IN_ROBOT_TIME_THRESHOLD = new Time(0.6d, TimeUnits.SECONDS);
-    private static final double STONE_IN_ROBOT_DISTANCE_THRESHOLD = 4d;
     private static final ControlConstants EXTEND_CONTROL_CONSTANTS;
-    private static final ControlConstants RETRACT_CONTROL_CONSTANTS;
 
     private static LiftStateMachine liftStateMachine;
     private RevMotor lift;
-
-    private Rev2mDistanceSensor stoneDetector;
     private TimeProfiler timeProfilerStoneDetection;
 
     private static IMotionProfile extensionProfile = null;
@@ -52,9 +45,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
     private double runningSum;
 
     private static DoubleSupplier manualControlExtension;
-
-
-    private boolean isDeliveryMode = false;
 
     static {
         new Thread(ResidualVibrationReductionMotionProfilerGenerator::init).start();
@@ -70,13 +60,8 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
                     extendController.S(), extendController.V(), extendController.A()
             );
 
-            RETRACT_CONTROL_CONSTANTS = new ControlConstants(
-                retractController.P(), retractController.I(), retractController.D(),
-                    retractController.S(), retractController.V(), retractController.A()
-            );
         } else {
             EXTEND_CONTROL_CONSTANTS  = new ControlConstants();
-            RETRACT_CONTROL_CONSTANTS = new ControlConstants();
         }
 
         LiftStateMachine.setRunExtension((setpoint) -> {
@@ -90,8 +75,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
     public LiftSubsystem(RevMotor lift) {
         setLiftStateMachine(new LiftStateMachine(this));
         setLift(lift);
-        setTimeProfilerStoneDetection(new TimeProfiler(false));
-        setLastError(0d);
         resetRunningSum();
     }
 
@@ -111,15 +94,11 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     @Override
     public void start() {
-        //getStoneDetector().resetDeviceConfigurationForOpMode();
-        //getTimeProfilerStoneDetection().start();
     }
 
     @Override
     public void stop() {
         getLift().setPower(0d);
-        //Yogesh - commented close
-        //getStoneDetector().close();
     }
 
     @Override
@@ -134,10 +113,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     @Override
     public void update(double dt) {
-        if(getTimeProfilerStoneDetection().getDeltaTime(TimeUnits.SECONDS, false) > 200d) {
-            getTimeProfilerStoneDetection().start();
-        }
-
         getStateMachine().update(dt);
         getLiftStateMachine().update(dt);
 
@@ -165,8 +140,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
             if (closeToSetpoint(1 / 4d)) {
                 //getVirtualFourBarStateMachine().updateState(VirtualFourBarStateMachine.State.STACK);
             }
-        } else {
-            output = getRetractControlConstants().getOutput(dt, error, getLastError(), getRunningSum(), setpointVelocity, setpointAcceleration, true);
         }
 
         setLastError(error);
@@ -180,7 +153,7 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     public void extend() {
         resetRunningSum();
-        setSetpoint(50);
+        setSetpoint(100);
     }
 
     public void retract() {
@@ -218,11 +191,9 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
             if(setpoint != 0d) {
                 //Extending
                 getLiftStateMachine().updateState(LiftStateMachine.State.EXTEND);
-                //setExtensionProfile(getStackTracker().motionProfilerSetpoints(true));
             } else {
                 //Retracting
                 getLiftStateMachine().updateState(LiftStateMachine.State.RETRACT);
-                //setExtensionProfile(getStackTracker().motionProfilerSetpoints(false));
                 setExtensionProfile(new ResidualVibrationReductionMotionProfilerGenerator(
                         getLift().getPosition(), -getLift().getPosition(), 25d, 50d
                 ));
@@ -242,10 +213,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
         return EXTEND_CONTROL_CONSTANTS;
     }
 
-    public static ControlConstants getRetractControlConstants() {
-        return RETRACT_CONTROL_CONSTANTS;
-    }
-
     public double getLastError() {
         return lastError;
     }
@@ -262,15 +229,7 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
         this.runningSum = runningSum;
     }
 
-    public TimeProfiler getTimeProfilerStoneDetection() {
-        return timeProfilerStoneDetection;
-    }
-
-    public void setTimeProfilerStoneDetection(TimeProfiler timeProfilerStoneDetection) {
-        this.timeProfilerStoneDetection = timeProfilerStoneDetection;
-    }
-
-    public static double getDesiredSetpoint() {
+     public static double getDesiredSetpoint() {
         return desiredSetpoint;
     }
 
@@ -280,9 +239,5 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     public static DoubleSupplier getManualControlExtension() {
         return manualControlExtension;
-    }
-
-    public static void setManualControlExtension(DoubleSupplier manualControlExtension) {
-        LiftSubsystem.manualControlExtension = manualControlExtension;
     }
 }

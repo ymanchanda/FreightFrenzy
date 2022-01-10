@@ -20,7 +20,7 @@ public class DropperLeftStateMachine extends TimedState<DropperLeftStateMachine.
     }
 
     public enum State implements Namable{
-        PICKUP("Pickup", 0.0d), INIT("Init", 0.4d), DROPOFF("Dropoff", 0.6d);
+        PICKUP("Pickup", 0.0d), INIT("Init", 0.4d), DROPOFF("Dropoff", 0.55d);
 
         private final String name;
         private final double position;
@@ -33,7 +33,6 @@ public class DropperLeftStateMachine extends TimedState<DropperLeftStateMachine.
         public double getPosition() {
             return position;
         }
-
 
         @Override
         public String getName(){
