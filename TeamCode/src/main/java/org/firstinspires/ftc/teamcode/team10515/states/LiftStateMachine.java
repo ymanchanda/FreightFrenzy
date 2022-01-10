@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.team10515.states;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.lib.util.Namable;
-import org.firstinspires.ftc.teamcode.team10515.subsystems.Feeder;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.LiftSubsystem;
 
 import java.util.function.DoubleConsumer;
@@ -51,7 +50,7 @@ public class LiftStateMachine implements IState<LiftStateMachine.State> {
 
     @Override
     public String getName() {
-        return "Feeder Extension State Machine";
+        return "Lift State Machine";
     }
 
     @Override
@@ -62,15 +61,15 @@ public class LiftStateMachine implements IState<LiftStateMachine.State> {
     @Override
     public void update(double dt) {
         if(attemptingStateChange()) {
-            if(getDesiredState().equals(State.EXTEND)) {// && Feeder.getFeederStoneGripperStateMachine().hasReachedStateGoal(FeederStoneGripperStateMachine.State.GRIP)) {
+            if(getDesiredState().equals(State.EXTEND)) {
                 setState(getDesiredState());
                 if(getRunExtension() != null) {
-                    getRunExtension().accept(Feeder.getDesiredSetpoint());
+                    getRunExtension().accept(LiftSubsystem.getDesiredSetpoint());
                 }
             } else if(!getDesiredState().equals(State.EXTEND)) {
                 setState(getDesiredState());
                 if(getRunExtension() != null) {
-                    getRunExtension().accept(Feeder.getDesiredSetpoint());
+                    getRunExtension().accept(LiftSubsystem.getDesiredSetpoint());
                 }
             }
         }

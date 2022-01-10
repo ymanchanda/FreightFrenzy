@@ -6,7 +6,7 @@ import org.firstinspires.ftc.teamcode.lib.util.TimeUnits;
 
 public class DropperRightStateMachine extends TimedState<DropperRightStateMachine.State> {
     public DropperRightStateMachine(){
-        super(State.REST);
+        super(State.INIT);
     }
 
     @Override
@@ -20,7 +20,7 @@ public class DropperRightStateMachine extends TimedState<DropperRightStateMachin
     }
 
     public enum State implements Namable{
-        PICKUP("Pickup", 0d), REST("Rest", 0.5d), DROPOFF("Dropoff", 0.75d);
+        PICKUP("Pickup", 1.0d), INIT("Init", 0.6d), DROPOFF("Dropoff", 0.4d);
 
         private final String name;
         private final double position;
@@ -28,13 +28,11 @@ public class DropperRightStateMachine extends TimedState<DropperRightStateMachin
         State(final String name, final double position){
             this.name = name;
             this.position = position;
-
         }
 
         public double getPosition() {
             return position;
         }
-
 
         @Override
         public String getName(){

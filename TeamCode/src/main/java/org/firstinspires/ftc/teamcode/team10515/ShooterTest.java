@@ -11,8 +11,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.team10515.control.EnhancedGamepad;
 import org.firstinspires.ftc.teamcode.team10515.control.ShooterPhysics;
 
-
-@TeleOp(name = "Carousel Test", group = "Test")
+@Disabled
+@TeleOp(name = "Shooter Test", group = "Test")
 public class ShooterTest extends OpMode{
     public double shooterSpeed = 0;
     public boolean moveShooter = false;

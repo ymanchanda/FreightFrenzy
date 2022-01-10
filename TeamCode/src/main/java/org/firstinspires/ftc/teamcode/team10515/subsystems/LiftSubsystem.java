@@ -124,7 +124,7 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     @Override
     public String getName() {
-        return "Feeder";
+        return "Lift";
     }
 
     @Override

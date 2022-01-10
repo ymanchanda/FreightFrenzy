@@ -47,6 +47,7 @@ import org.firstinspires.ftc.teamcode.team10515.states.IntakeStateMachine;
 public class FFRedTeleop extends FreightFrenzyRobot {
 
     public double currentTime = 0; // keep track of current time
+    private boolean dropperLeft = true;
 //    public double previousTime = 0; // keep track of last time A was pressed (Flicker was moved)
 //    public double flickerInterval = 1; // after 1 second has passed since pressing A, move Flicker back to original position
 
@@ -64,7 +65,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
     public void loop() {
         super.loop();
 
-        setDrivetrainPower(new Pose2d(-gamepad1.left_stick_y, -gamepad1.left_stick_x, new Rotation2d(gamepad1.right_stick_x, false)));
+        setDrivetrainPower(new Pose2d(gamepad1.left_stick_y, -gamepad1.left_stick_x, new Rotation2d(-gamepad1.right_stick_x, false)));
 
         //-----------------------------------------------------------------------------------------------------------------------------------------
         //Gamepad 1
@@ -83,20 +84,34 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             telemetry.addLine("Pad1 Back button");
         }
 
-        if(getEnhancedGamepad1().isX()){
-            if(getDropperLeftSubsystem().getState() == DropperLeftStateMachine.State.PICKUP) {
-                getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
+        if(getEnhancedGamepad1().isbJustPressed()){
+            if (dropperLeft) {
+                getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
+                telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
             }
-            else if(getDropperRightSubsystem().getState() == DropperRightStateMachine.State.PICKUP) {
-                getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
+            else {
+                getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
+                telemetry.addLine("Right Dropper: " + getDropperRightSubsystem().getStateMachine().getState());
             }
         }
-        if(getEnhancedGamepad1().isB()){
-            if(getDropperLeftSubsystem().getState() == DropperLeftStateMachine.State.DROPOFF) {
-                getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
+        if(getEnhancedGamepad1().isxJustPressed()){
+           if (dropperLeft) {
+                getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
+                telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
             }
-            else if(getDropperRightSubsystem().getState() == DropperRightStateMachine.State.DROPOFF) {
-                getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
+            else {
+                getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
+                telemetry.addLine("Right Dropper: " + getDropperRightSubsystem().getStateMachine().getState());
+            }
+        }
+        if (getEnhancedGamepad1().isDpadUpJustPressed()){
+            if (dropperLeft) {
+                getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
+                telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
+            }
+            else {
+                getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
+                telemetry.addLine("Right Dropper: " + getDropperRightSubsystem().getStateMachine().getState());
             }
         }
 
@@ -116,25 +131,27 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             telemetry.addLine("Pad2 Back button");
         }
 
-        if(getEnhancedGamepad2().isA()){
+        if(getEnhancedGamepad2().isaJustPressed()){
             //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.DOWN);
-            telemetry.addLine("Pad2 a button");
+            telemetry.addLine("Lift Down");
         }
 
-        //Check for Y button
-        if(getEnhancedGamepad2().isY()){
+        if(getEnhancedGamepad2().isyJustPressed()){
             //getPulleySubsystem().getStateMachine().updateState(PulleyStateMachine.State.UP);
-            telemetry.addLine("Pad2 y button");
+            telemetry.addLine("Lift Up");
         }
 
-        //Check for DPad
-        if(getEnhancedGamepad2().isDpad_right()){
-            getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.REST);
-            getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
+        //Gamepad 2 decides which dropper is active i.e. Left or Right. Starts with Left as default.
+        if(getEnhancedGamepad2().isDpadLeftJustPressed()){
+            dropperLeft = true;
+            getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
+            getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
         }
-        else if(getEnhancedGamepad2().isDpad_left()){
-            getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
-            getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.REST);
+
+        if(getEnhancedGamepad2().isDpadRightJustPressed()){
+            dropperLeft = false;
+            getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
+            getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
         }
 
 
