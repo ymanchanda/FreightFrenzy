@@ -2,18 +2,18 @@ package org.firstinspires.ftc.teamcode.team10515.states;
 
 import org.firstinspires.ftc.teamcode.lib.util.Namable;
 
-public class IntakeStateMachine extends SimpleState<IntakeStateMachine.State> {
-    public IntakeStateMachine() { super(State.IDLE); }
+public class ElevStateMachine extends SimpleState<ElevStateMachine.State> {
+    public ElevStateMachine() { super(State.IDLE); }
 
     @Override
     public String getName() {
-        return "Intake State Machine";
+        return "Elevator State Machine";
     }
 
     public enum State implements Namable {
         IDLE("Idle", 0d),
-        INTAKE("Intake", -0.7d),
-        OUTTAKE("Outtake", 0.6d);
+        EXTEND("Extend", 0.3d),
+        RETRACT("Retract", -0.3d);
 
         private final String name;
         private final double speed;

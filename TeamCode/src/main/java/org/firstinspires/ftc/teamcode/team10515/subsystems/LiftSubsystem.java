@@ -36,7 +36,6 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     private static LiftStateMachine liftStateMachine;
     private RevMotor lift;
-    private TimeProfiler timeProfilerStoneDetection;
 
     private static IMotionProfile extensionProfile = null;
     private static double setpoint = 0d;
@@ -44,16 +43,12 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
     private double lastError;
     private double runningSum;
 
-    private static DoubleSupplier manualControlExtension;
-
     static {
         new Thread(ResidualVibrationReductionMotionProfilerGenerator::init).start();
         PIDSVA[] controllers = LiftSubsystem.class.getAnnotationsByType(PIDSVA.class);
         if(controllers.length == 2) {
             PIDSVA extendController;
-            PIDSVA retractController;
             extendController  = controllers[0];
-            retractController = controllers[0];
 
             EXTEND_CONTROL_CONSTANTS = new ControlConstants(
                 extendController.P(), extendController.I(), extendController.D(),
@@ -126,20 +121,9 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
         setRunningSum(getRunningSum() + error * dt);
         double output = 0d;
-        if(getManualControlExtension() != null ) {
-            //Manual control
-            output = getManualControlExtension().getAsDouble();
-            if(output > 0d) {
-                getLiftStateMachine().updateState(LiftStateMachine.State.EXTEND);
-            }
-
-            output += getExtendControlConstants().kS();
-        } else if(getLiftStateMachine().getState().equals(LiftStateMachine.State.EXTEND)) {
+        if(getLiftStateMachine().getState().equals(LiftStateMachine.State.EXTEND)) {
             output = getExtendControlConstants().getOutput(dt, error, getLastError(), getRunningSum(), setpointVelocity, setpointAcceleration, false);
             output += getExtendControlConstants().kS();
-            if (closeToSetpoint(1 / 4d)) {
-                //getVirtualFourBarStateMachine().updateState(VirtualFourBarStateMachine.State.STACK);
-            }
         }
 
         setLastError(error);
@@ -235,9 +219,5 @@ public class LiftSubsystem implements ISubsystem<LiftStateMachine, LiftStateMach
 
     public static void setDesiredSetpoint(double desiredSetpoint) {
         LiftSubsystem.desiredSetpoint = desiredSetpoint;
-    }
-
-    public static DoubleSupplier getManualControlExtension() {
-        return manualControlExtension;
     }
 }

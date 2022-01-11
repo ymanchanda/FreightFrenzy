@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.team10515.subsystems.ExpansionHubs;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.FlickerSubsystem;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ForkliftSubsystem2;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.IntakeSubsystem;
-import org.firstinspires.ftc.teamcode.team10515.subsystems.LiftSubsystem;
+import org.firstinspires.ftc.teamcode.team10515.subsystems.ElevSubsystem;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.RobotStateEstimator;
 //import org.firstinspires.ftc.teamcode.team10515.subsystems.ShooterSubsystem;
 import org.openftc.revextensions2.ExpansionHubEx;
@@ -49,10 +49,7 @@ public abstract class FreightFrenzyRobot extends Robot {
     private ExpansionHubs expansionHubs;
     private RobotStateEstimator robotStateEstimator;
     private Drive drive;
-    //private StackTracker stackTracker;
-    //private FlickerSubsystem flickerSubsystem;
-    //private ShooterSubsystem shooterMotors;
-    private LiftSubsystem liftSubsystem;
+    private ElevSubsystem elevSubsystem;
     private IntakeSubsystem intakeMotorSubsystem;
     private CarouselSubsystem carouselSubsystem;
     private DropperLeftSubsystem dropperLeftSubsystem;
@@ -88,7 +85,7 @@ public abstract class FreightFrenzyRobot extends Robot {
         setRobotStateEstimator(new RobotStateEstimator(this, hardwareMap.get(BNO055IMU.class, "imu"), new Pose2d()));
         setDrive(new Drive(getRobotStateEstimator(), getMotors()[0], getMotors()[1], getMotors()[2], getMotors()[3]));
         setIntakeMotorSubsystem(new IntakeSubsystem(getMotors()[4]));
-        setLiftSubsystem(new LiftSubsystem(getMotors()[5]));
+        setElevSubsystem(new ElevSubsystem(getMotors()[5]));
         setCarouselSubsystem(new CarouselSubsystem(getMotors()[6]));
 
         setDropperLeftSubsystem(new DropperLeftSubsystem(getServos()[0]));
@@ -116,7 +113,7 @@ public abstract class FreightFrenzyRobot extends Robot {
         getExpansionHubs().update(getDt());
         getDrive().update(getDt());
         getIntakeMotorSubsystem().update(getDt());
-        //getLiftSubsystem().update(getDt());
+        getElevSubsystem().update(getDt());
         getCarouselSubsystem().update(getDt());
 
         getDropperLeftSubsystem().update(getDt());
@@ -140,14 +137,9 @@ public abstract class FreightFrenzyRobot extends Robot {
     public void stop() {
         super.stop();
         getExpansionHubs().stop();
-        //Yogesh Commented This
-        //getRobotStateEstimator().stop();
         getDrive().stop();
-        //getForkliftSubsystem2().stop();
-        //getFlickerSubsystem().stop();
-        //getShooterSubsystem().stop();
         getIntakeMotorSubsystem().stop();
-        getLiftSubsystem().stop();
+        getElevSubsystem().stop();
         getCarouselSubsystem().stop();
 
         getDropperLeftSubsystem().stop();
@@ -187,12 +179,12 @@ public abstract class FreightFrenzyRobot extends Robot {
         this.intakeMotorSubsystem = intakeMotorSubsystem;
     }
 
-    public LiftSubsystem getLiftSubsystem() {
-        return liftSubsystem;
+    public ElevSubsystem getElevSubsystem() {
+        return elevSubsystem;
     }
 
-    public void setLiftSubsystem(LiftSubsystem liftSubsystem){
-        this.liftSubsystem = liftSubsystem;
+    public void setElevSubsystem(ElevSubsystem elevSubsystem){
+        this.elevSubsystem = elevSubsystem;
     }
 
     public CarouselSubsystem getCarouselSubsystem() {

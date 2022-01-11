@@ -7,7 +7,9 @@ import org.firstinspires.ftc.teamcode.lib.geometry.Rotation2d;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperLeftStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperRightStateMachine;
+import org.firstinspires.ftc.teamcode.team10515.states.ElevStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.IntakeStateMachine;
+import org.firstinspires.ftc.teamcode.team10515.subsystems.LiftSubsystem;
 
 /*
  * This {@code class} acts as the driver-controlled program for FTC team 10515 for the Skystone
@@ -119,11 +121,11 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         //Gamepad 2
 
         if(getEnhancedGamepad2().getLeft_trigger() > 0){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.OUTTAKE);
             telemetry.addLine("Pad2 Left Trigger");
         }
         else if(getEnhancedGamepad2().getRight_trigger() > 0){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.OUTTAKE);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
             telemetry.addLine("Pad2 Right Trigger");
         }
         else if(getEnhancedGamepad2().isBack()){
@@ -132,13 +134,13 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         }
 
         if(getEnhancedGamepad2().isaJustPressed()){
-            getLiftSubsystem().retract();
-            telemetry.addLine("Lift Down");
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
+            telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
         }
 
         if(getEnhancedGamepad2().isyJustPressed()){
-            getLiftSubsystem().extend();
-            telemetry.addLine("Lift Up");
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
+            telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
         }
 
         //Gamepad 2 decides which dropper is active i.e. Left or Right. Starts with Left as default.

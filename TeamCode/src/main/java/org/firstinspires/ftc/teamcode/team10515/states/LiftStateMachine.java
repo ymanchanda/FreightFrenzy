@@ -25,7 +25,7 @@ public class LiftStateMachine implements IState<LiftStateMachine.State> {
 
     @Override
     public boolean hasReachedStateGoal() {
-        return getLiftSubsystem().closeToSetpoint(1 / 4d) && liftSubsystem.getExtensionProfile().isDone();
+        return liftSubsystem.getExtensionProfile().isDone();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class LiftStateMachine implements IState<LiftStateMachine.State> {
 
     @Override
     public void update(double dt) {
-        if(attemptingStateChange()) {
+        /*if(attemptingStateChange()) {
             if(getDesiredState().equals(State.EXTEND)) {
                 setState(getDesiredState());
                 if(getRunExtension() != null) {
@@ -72,7 +72,7 @@ public class LiftStateMachine implements IState<LiftStateMachine.State> {
                     getRunExtension().accept(LiftSubsystem.getDesiredSetpoint());
                 }
             }
-        }
+        }*/
     }
 
     private void setState(State state) {
