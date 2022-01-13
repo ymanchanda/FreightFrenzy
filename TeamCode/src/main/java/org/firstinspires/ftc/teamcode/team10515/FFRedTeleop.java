@@ -116,6 +116,15 @@ public class FFRedTeleop extends FreightFrenzyRobot {
                 telemetry.addLine("Right Dropper: " + getDropperRightSubsystem().getStateMachine().getState());
             }
         }
+        if(getEnhancedGamepad1().isaJustPressed()){
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
+            telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
+        }
+
+        if(getEnhancedGamepad1().isyJustPressed()){
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
+            telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
+        }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------
         //Gamepad 2
@@ -131,16 +140,6 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         else if(getEnhancedGamepad2().isBack()){
             getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
             telemetry.addLine("Pad2 Back button");
-        }
-
-        if(getEnhancedGamepad2().isaJustPressed()){
-            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-            telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
-        }
-
-        if(getEnhancedGamepad2().isyJustPressed()){
-            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-            telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
         }
 
         //Gamepad 2 decides which dropper is active i.e. Left or Right. Starts with Left as default.

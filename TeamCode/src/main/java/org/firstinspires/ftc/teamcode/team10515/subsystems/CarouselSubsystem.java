@@ -54,7 +54,7 @@ public class CarouselSubsystem implements ISubsystem<CarouselStateMachine, Carou
     private void setCarousel(RevMotor carousel){
         this.carousel = carousel;
     }
-    private RevMotor getCarousel(){
+    public RevMotor getCarousel(){
         return carousel;
     }
 }

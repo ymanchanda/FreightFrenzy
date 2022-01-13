@@ -10,20 +10,60 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevMotor;
 import org.firstinspires.ftc.teamcode.team10515.FreightFrenzyRobot;
+import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.Drive;
 
-public abstract class FFAutoMethods extends FreightFrenzyRobot {
-    RevMotor LF = getMotors()[0];
-    RevMotor LR = getMotors()[1];
-    RevMotor RF = getMotors()[2];
-    RevMotor RR = getMotors()[3];
-    RevMotor Lift = getMotors()[4];
-    RevMotor Intake = getMotors()[5];
-    RevMotor Carousel = getMotors()[6];
-    BNO055IMU imu;
-    Orientation angles;
+public class FFAutoMethods extends FreightFrenzyRobot {
+    private BNO055IMU imu;
+    private Orientation angles;
+    private RevMotor LF;
+    private RevMotor LR;
+    private RevMotor RF;
+    private RevMotor RR;
+    private RevMotor Lift;
+    private RevMotor Intake;
+    private RevMotor Carousel;
 
+    @Override
+    public void init(){
+        super.init();
+        /*LF = getDrive().getFrontLeft();
+        LR = getDrive().getBackLeft();
+        RF = getDrive().getFrontRight();
+        RR = getDrive().getBackRight();
+        Lift = getElevSubsystem().getElevWheels();
+        Intake = getIntakeMotorSubsystem().getIntakeWheels();
+        Carousel = getCarouselSubsystem().getCarousel();*/
+        LF = getMotors()[1];
+        LR = getMotors()[0];
+        RF = getMotors()[3];
+        RR = getMotors()[2];
+        Lift = getMotors()[4];
+        Intake = getMotors()[5];
+        Carousel = getMotors()[6];
+    }
+
+    @Override
+    public void start(){
+        super.start();
+    }
+
+    @Override
+    public void loop(){
+        super.loop();
+    }
+
+    @Override
+    public void init_loop(){
+        super.init_loop();
+    }
+
+    @Override
     public void stop(){
+        super.stop();
+    }
+    
+    public void stopMoving(){
         LF.setPower(0);
         RF.setPower(0);
         LR.setPower(0);
@@ -87,7 +127,7 @@ public abstract class FFAutoMethods extends FreightFrenzyRobot {
         while(LF.getMotor().isBusy() && RF.getMotor().isBusy() && LR.getMotor().isBusy() && RR.getMotor().isBusy()){
 
         }
-        stop();
+        stopMoving();
 
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -119,7 +159,7 @@ public abstract class FFAutoMethods extends FreightFrenzyRobot {
         while(LF.getMotor().isBusy() && RF.getMotor().isBusy() && LR.getMotor().isBusy() && RR.getMotor().isBusy()){
 
         }
-        stop();
+        stopMoving();
 
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -151,7 +191,7 @@ public abstract class FFAutoMethods extends FreightFrenzyRobot {
         while(LF.getMotor().isBusy() && RF.getMotor().isBusy() && LR.getMotor().isBusy() && RR.getMotor().isBusy()){
 
         }
-        stop();
+        stopMoving();
 
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -183,7 +223,7 @@ public abstract class FFAutoMethods extends FreightFrenzyRobot {
         while(LF.getMotor().isBusy() && RF.getMotor().isBusy() && LR.getMotor().isBusy() && RR.getMotor().isBusy()){
 
         }
-        stop();
+        stopMoving();
 
         LF.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         LR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -192,7 +232,7 @@ public abstract class FFAutoMethods extends FreightFrenzyRobot {
     }
     public void runCarousel(String playingSide){
         if(playingSide.equals("blue")){
-            Carousel.setPower(0.6);
+            getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.BLUE);
         }
         else if(playingSide.equals("red")){
             Carousel.setPower(-0.6);

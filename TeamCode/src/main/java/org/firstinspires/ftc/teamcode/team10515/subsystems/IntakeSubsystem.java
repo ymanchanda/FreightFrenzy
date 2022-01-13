@@ -56,7 +56,7 @@ public class IntakeSubsystem implements ISubsystem<IntakeStateMachine, IntakeSta
     private void setIntakeWheels(RevMotor intakeMotor){
         this.intakeWheels = intakeMotor;
     }
-    private RevMotor getIntakeWheels(){
+    public RevMotor getIntakeWheels(){
         return intakeWheels;
     }
 }

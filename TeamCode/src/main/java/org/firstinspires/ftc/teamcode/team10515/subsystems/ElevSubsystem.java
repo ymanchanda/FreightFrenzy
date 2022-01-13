@@ -61,7 +61,7 @@ public class ElevSubsystem implements ISubsystem<ElevStateMachine, ElevStateMach
     private void setElevWheels(RevMotor elevMotor){
         this.elevWheels = elevMotor;
     }
-    private RevMotor getElevWheels(){
+    public RevMotor getElevWheels(){
         return elevWheels;
     }
 }
