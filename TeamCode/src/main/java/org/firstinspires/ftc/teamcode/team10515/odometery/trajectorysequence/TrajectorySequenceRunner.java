@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.seq
 import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.sequencesegment.TrajectorySegment;
 import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.sequencesegment.TurnSegment;
 import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.sequencesegment.WaitSegment;
-import org.firstinspires.ftc.teamcode.team10515.odometery.util.DashboardUtil;
+import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

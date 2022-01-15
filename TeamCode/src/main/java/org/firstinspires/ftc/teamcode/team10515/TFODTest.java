@@ -1,13 +1,9 @@
 package org.firstinspires.ftc.teamcode.team10515;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.R;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Size;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -35,7 +31,7 @@ public class TFODTest extends FreightFrenzyRobot {
     @Override
     public void init(){
         super.init();
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", String.valueOf(R.id.cameraMonitorViewId), hardwareMap.appContext.getPackageName());
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         pipeline = new SamplePipeline();
@@ -56,7 +52,7 @@ public class TFODTest extends FreightFrenzyRobot {
         });
 
         try {
-            tfod = new TFODBuilder(hardwareMap, "model2.lite", "element").build();
+            tfod = new TFODBuilder(hardwareMap, "converted_model.tflite", "element").build();
             telemetry.addLine("Successful build of model");
         } catch (IOException e) {
             e.printStackTrace();
@@ -95,8 +91,8 @@ public class TFODTest extends FreightFrenzyRobot {
             telemetry.addLine("Y Pressed");
             detections = tfod.recognize(pipeline.getMat());
             telemetry.addLine("Size of list: " + detections.size());
-            telemetry.addLine("Left most coordinate of bounding box: " + detections.get(0).getLocation().left);
-            telemetry.addLine("Confidence: " + detections.get(0).getConfidence());
+//            telemetry.addLine("Left most coordinate of bounding box: " + detections.get(0).getLocation().left);
+//            telemetry.addLine("Confidence: " + detections.get(0).getConfidence());
             while(!getEnhancedGamepad1().isB()){
                 telemetry.addLine("Press B to continue");
                 telemetry.update();

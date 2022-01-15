@@ -12,7 +12,7 @@ public class IntakeStateMachine extends SimpleState<IntakeStateMachine.State> {
 
     public enum State implements Namable {
         IDLE("Idle", 0d),
-        INTAKE("Intake", -0.7d),
+        INTAKE("Intake", -0.75d),
         OUTTAKE("Outtake", 0.6d);
 
         private final String name;

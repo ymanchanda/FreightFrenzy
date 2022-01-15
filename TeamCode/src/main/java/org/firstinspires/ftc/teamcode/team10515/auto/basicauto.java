@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.team10515.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+@Disabled
 @Autonomous(name="Program 1", group="XtremeV")
 public class basicauto extends UGBase {
 

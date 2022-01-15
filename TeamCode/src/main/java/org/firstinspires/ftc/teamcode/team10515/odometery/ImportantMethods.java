@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.team10515.odometery;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -11,8 +12,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
+@Disabled
 @Autonomous(name="EncoderBasedMecanumMethods", group = "Pushbot")
-
 public abstract class ImportantMethods extends LinearOpMode {
     /* Declare OpMode members. */
     hwmap robot = new hwmap();   // Use a Pushbot's hardware

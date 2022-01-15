@@ -50,6 +50,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
 
     public double currentTime = 0; // keep track of current time
     private boolean dropperLeft = true;
+    private boolean stopintake = true;
 //    public double previousTime = 0; // keep track of last time A was pressed (Flicker was moved)
 //    public double flickerInterval = 1; // after 1 second has passed since pressing A, move Flicker back to original position
 
@@ -67,7 +68,9 @@ public class FFRedTeleop extends FreightFrenzyRobot {
     public void loop() {
         super.loop();
 
-        setDrivetrainPower(new Pose2d(gamepad1.left_stick_y, -gamepad1.left_stick_x, new Rotation2d(-gamepad1.right_stick_x, false)));
+        setDrivetrainPower(new Pose2d(gamepad1.left_stick_y, gamepad1.left_stick_x, new Rotation2d(-gamepad1.right_stick_x, false)));
+        //telemetry.addData("left x: ", gamepad1.left_stick_x);
+        //telemetry.addData("left y: ", gamepad1.left_stick_y);
 
         //-----------------------------------------------------------------------------------------------------------------------------------------
         //Gamepad 1
@@ -87,6 +90,8 @@ public class FFRedTeleop extends FreightFrenzyRobot {
         }
 
         if(getEnhancedGamepad1().isbJustPressed()){
+            //allow intake to work because one of the droppers is in Pickup state but don't start the intake automatically
+            stopintake = false;
             if (dropperLeft) {
                 getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                 telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
@@ -97,6 +102,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             }
         }
         if(getEnhancedGamepad1().isxJustPressed()){
+            stopintake = true;
            if (dropperLeft) {
                 getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
                 telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
@@ -107,6 +113,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             }
         }
         if (getEnhancedGamepad1().isDpadUpJustPressed()){
+            stopintake = true;
             if (dropperLeft) {
                 getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
                 telemetry.addLine("Left Dropper: " + getDropperLeftSubsystem().getStateMachine().getState());
@@ -115,15 +122,6 @@ public class FFRedTeleop extends FreightFrenzyRobot {
                 getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
                 telemetry.addLine("Right Dropper: " + getDropperRightSubsystem().getStateMachine().getState());
             }
-        }
-        if(getEnhancedGamepad1().isaJustPressed()){
-            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-            telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
-        }
-
-        if(getEnhancedGamepad1().isyJustPressed()){
-            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-            telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
         }
 
         //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -134,7 +132,8 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             telemetry.addLine("Pad2 Left Trigger");
         }
         else if(getEnhancedGamepad2().getRight_trigger() > 0){
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
+            if (!stopintake)
+                getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
             telemetry.addLine("Pad2 Right Trigger");
         }
         else if(getEnhancedGamepad2().isBack()){
@@ -142,19 +141,37 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             telemetry.addLine("Pad2 Back button");
         }
 
+        if(getEnhancedGamepad2().isaJustPressed()){
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
+            telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
+        }
+
+        if(getEnhancedGamepad2().isyJustPressed()){
+            getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
+            telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
+        }
+
         //Gamepad 2 decides which dropper is active i.e. Left or Right. Starts with Left as default.
         if(getEnhancedGamepad2().isDpadLeftJustPressed()){
             dropperLeft = true;
+            stopintake = true;
             getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
             getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
         }
 
         if(getEnhancedGamepad2().isDpadRightJustPressed()){
             dropperLeft = false;
+            stopintake = true;
             getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
             getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
         }
 
+        if (stopintake) {
+            //stop intake because droppers are not in pickup state
+            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
+        }
 
         //--------------------------------------------------------------------------------------------------------------------------------
         // last year
