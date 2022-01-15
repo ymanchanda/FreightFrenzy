@@ -15,15 +15,15 @@ import org.firstinspires.ftc.teamcode.lib.util.TimeProfiler;
 import org.firstinspires.ftc.teamcode.lib.util.TimeUnits;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Autonomous(name = "Red Left", group = "XtremeV")
-public class RedLeftAuto extends LinearOpMode {
+@Autonomous(name = "Blue Right", group = "XtremeV")
+public class BlueRightAuto extends LinearOpMode {
     static final double COUNTS_PER_INCH = (383.6 * 0.5)/(3.77953 * 3.1415);
     FFBase drive;
     private static double dt;
     private static TimeProfiler updateRuntime;
 
     static final int Traj0 = 3;
-    static final int Traj1 = 90;
+    static final int Traj1 = -90;
     static final int Traj2 = 26;
     static final int Traj3 = 42;
     static final int Traj4 = 21;
@@ -56,8 +56,8 @@ public class RedLeftAuto extends LinearOpMode {
 
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
-        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
-        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP); //Changed from init to pickup
+        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
+        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT); //Changed from init to pickup
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
         Trajectory traj0 = drive.trajectoryBuilder(new Pose2d())
@@ -77,7 +77,7 @@ public class RedLeftAuto extends LinearOpMode {
                 .build();
 
         Trajectory traj4 = drive.trajectoryBuilder(traj3.end())//Stop carousel
-                .strafeRight(Traj4)
+                .strafeLeft(Traj4)
                 .build();
 
         //Drop pre-loaded stone
@@ -122,7 +122,7 @@ public class RedLeftAuto extends LinearOpMode {
                         currentState = State.TRAJ2;
                         waitTimer.reset();
                     }
-                break;
+                    break;
 
                 case TRAJ2:
                     if (!drive.isBusy()) {
@@ -135,7 +135,7 @@ public class RedLeftAuto extends LinearOpMode {
                 case SPIN:
 //                    drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                     if(!drive.isBusy()) {
-                        drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.RED);
+                        drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.BLUE);
                         currentState = State.TRAJ3;
                         waitTimer.reset();
                     }
@@ -161,7 +161,7 @@ public class RedLeftAuto extends LinearOpMode {
 
                 case DROPRIGHT:
                     if(!drive.isBusy()){
-                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
+                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
                         currentState = State.PICKUPRIGHT;
                         waitTimer.reset();
                     }
@@ -169,7 +169,7 @@ public class RedLeftAuto extends LinearOpMode {
 
                 case PICKUPRIGHT:
                     if(waitTimer.milliseconds() > 1000){
-                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
+                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
                         currentState = State.TRAJ5;
                         waitTimer.reset();

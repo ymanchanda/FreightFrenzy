@@ -51,6 +51,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
     public double currentTime = 0; // keep track of current time
     private boolean dropperLeft = true;
     private boolean stopintake = true;
+    private boolean liftdown = true;
 //    public double previousTime = 0; // keep track of last time A was pressed (Flicker was moved)
 //    public double flickerInterval = 1; // after 1 second has passed since pressing A, move Flicker back to original position
 
@@ -132,7 +133,7 @@ public class FFRedTeleop extends FreightFrenzyRobot {
             telemetry.addLine("Pad2 Left Trigger");
         }
         else if(getEnhancedGamepad2().getRight_trigger() > 0){
-            if (!stopintake)
+            if (!stopintake && liftdown)
                 getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
             telemetry.addLine("Pad2 Right Trigger");
         }
@@ -143,13 +144,15 @@ public class FFRedTeleop extends FreightFrenzyRobot {
 
         if(getEnhancedGamepad2().isaJustPressed()){
             getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
+            liftdown = true;
+//            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.INTAKE);
             telemetry.addLine("a pressed lift up: " + getElevSubsystem().getStateMachine().getState());
         }
 
         if(getEnhancedGamepad2().isyJustPressed()){
             getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-            getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
+            stopintake = true;
+            liftdown = false;
             telemetry.addLine("y pressed lift down: " + getElevSubsystem().getStateMachine().getState());
         }
 
