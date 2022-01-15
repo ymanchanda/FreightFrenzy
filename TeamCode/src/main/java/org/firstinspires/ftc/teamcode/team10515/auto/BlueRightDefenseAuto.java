@@ -22,7 +22,7 @@ public class BlueRightDefenseAuto extends LinearOpMode {
     private static TimeProfiler updateRuntime;
 
     static final int Traj0 = 40;
-    static final int Traj1 = 2;
+    static final int Traj1 = 4;
     static final int Traj2 = 30;
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
