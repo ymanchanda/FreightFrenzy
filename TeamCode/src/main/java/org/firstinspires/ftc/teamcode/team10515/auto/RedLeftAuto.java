@@ -26,8 +26,8 @@ public class RedLeftAuto extends LinearOpMode {
     static final int Traj1 = 90;
     static final int Traj2 = 26;
     static final int Traj3 = 42;
-    static final int Traj4 = 21;
-    static final int Traj5 = 42;
+    static final int Traj4 = 20;
+    static final int Traj5 = 43;
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);

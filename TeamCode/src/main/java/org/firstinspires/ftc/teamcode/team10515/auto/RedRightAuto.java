@@ -45,20 +45,20 @@ public class RedRightAuto extends LinearOpMode {
 
     State currentState = State.IDLE;
 
-    //Pose2d startPose = new Pose2d(-62.375, -15, Math.toRadians(0));
+    Pose2d startPose = new Pose2d(14, -63, Math.toRadians(90));
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
 
         drive = new FFBase(hardwareMap);
-
+        drive.setPoseEstimate(startPose);
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
-        Trajectory traj0 = drive.trajectoryBuilder(new Pose2d())
+        Trajectory traj0 = drive.trajectoryBuilder(startPose)
                 .forward(Traj0)
                 .build();
 

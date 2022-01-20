@@ -5,6 +5,8 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperLeftStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperRightStateMachine;
@@ -22,70 +24,69 @@ public class BlueRightAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final int Traj0 = 3;
-    static final int Traj1 = -90;
+    static final int Traj1 = 3;
+    static final int Turn1 = -90;
     static final int Traj2 = 26;
-    static final int Traj3 = 42;
-    static final int Traj4 = 21;
-    static final int Traj5 = 42;
+    static final Vector2d Traj3 = new Vector2d(-12,40);
+    static final double angleForTraj3 = Math.toRadians(-180);
+    static final Vector2d Traj4 = new Vector2d(-28, 60);
+    static final double angleForTraj4 = Math.toRadians(-180);
+    static final Pose2d Traj5 = new Pose2d(-55,40,Math.toRadians(-180));
+    static final double angleForTraj5 = Math.toRadians(180);
+
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     enum State {
         WAIT0,
-        TRAJ1,
-        TRAJ2,
+        TOCAROUSEL,
         SPIN, //spin carousel
-        TRAJ3,
-        TRAJ4,
+        TOHUB,
         DROPRIGHT, //bring the right dropper in drop position
         PICKUPRIGHT, //bring the right dropper in pickup position
-        TRAJ5,
+        TOPARK,
         IDLE
     }
 
     State currentState = State.IDLE;
 
-    //Pose2d startPose = new Pose2d(-62.375, -15, Math.toRadians(0));
+    Pose2d startPose = new Pose2d(-28, 63, Math.toRadians(-90));
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
 
         drive = new FFBase(hardwareMap);
-
+        drive.setPoseEstimate(startPose);
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT); //Changed from init to pickup
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
-        Trajectory traj0 = drive.trajectoryBuilder(new Pose2d())
-                .forward(Traj0)
+        TrajectorySequence traj1 = drive.trajectorySequenceBuilder(startPose)
+                .forward(Traj1)
                 .build();
 
         //90 degree rotation in between: drive.turn(Math.toRadians(90));
 
-        Trajectory traj2 = drive.trajectoryBuilder(traj0.end().plus(new Pose2d(0, 0, Math.toRadians(Traj1)))) //Have to add this because of the turn (last position is not traj0.end())
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end().plus(new Pose2d(0, 0, Math.toRadians(Traj1)))) //Have to add this because of the turn (last position is not traj0.end())
                 .forward(Traj2)
                 .build();
 
         //Spin carousel
 
-        Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
-                .back(Traj3)
-                .build();
-
-        Trajectory traj4 = drive.trajectoryBuilder(traj3.end())//Stop carousel
-                .strafeLeft(Traj4)
+        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(traj2.end())
+                .splineToConstantHeading(Traj3, angleForTraj3)
                 .build();
 
         //Drop pre-loaded stone
 
         //Pickup dropper
 
-        Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
-                .forward(Traj5)
+        TrajectorySequence traj4 = drive.trajectorySequenceBuilder(traj3.end())//Stop carousel
+                .splineToConstantHeading(Traj4, angleForTraj4)
+                .splineToLinearHeading(Traj5, angleForTraj5)
                 .build();
 
         drive.getExpansionHubs().update(getDt());
@@ -110,23 +111,16 @@ public class BlueRightAuto extends LinearOpMode {
 
                 case WAIT0:
                     if (waitTimer.milliseconds() >= 100) {
-                        drive.followTrajectoryAsync(traj0);
-                        currentState = State.TRAJ1;
+                        drive.followTrajectorySequenceAsync(traj1);
+                        currentState = State.TOCAROUSEL;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ1:
+                case TOCAROUSEL:
                     if (!drive.isBusy()) {
-                        drive.turn(Math.toRadians(Traj1)); //This is traj1
-                        currentState = State.TRAJ2;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ2:
-                    if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj2);
+                        drive.turn(Math.toRadians(Turn1)); //This is traj1
+                        drive.followTrajectorySequenceAsync(traj2);
                         currentState = State.SPIN;
                         waitTimer.reset();
                     }
@@ -136,23 +130,15 @@ public class BlueRightAuto extends LinearOpMode {
 //                    drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                     if(!drive.isBusy()) {
                         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.BLUE);
-                        currentState = State.TRAJ3;
+                        currentState = State.TOHUB;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ3:
-                    if(waitTimer.milliseconds() >= 3000) { //TODO: Spin for one second?
+                case TOHUB:
+                    if(waitTimer.milliseconds() >= 2500) { //TODO: Spin for one second?
                         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
-                        drive.followTrajectoryAsync(traj3);
-                        currentState = State.TRAJ4;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ4:
-                    if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj4);
+                        drive.followTrajectorySequenceAsync(traj3);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
                         currentState = State.DROPRIGHT;
                         waitTimer.reset();
@@ -171,14 +157,14 @@ public class BlueRightAuto extends LinearOpMode {
                     if(waitTimer.milliseconds() > 1000){
                         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-                        currentState = State.TRAJ5;
+                        currentState = State.TOPARK;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ5:
+                case TOPARK:
                     if(waitTimer.milliseconds() > 1000) {
-                        drive.followTrajectoryAsync(traj5);
+                        drive.followTrajectorySequenceAsync(traj4);
                         currentState = State.IDLE;
                         waitTimer.reset();
                     }

@@ -46,6 +46,8 @@ import org.firstinspires.ftc.teamcode.drive.StandardTrackingWheelLocalizer;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevMotor;
 import org.firstinspires.ftc.teamcode.lib.drivers.RevServo;
 import org.firstinspires.ftc.teamcode.team10515.FreightFrenzyAutoRobot;
+import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequenceRunner;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.subsystems.FFExpansionHubs;
@@ -90,6 +92,11 @@ public class FFBase extends MecanumDrive {
     public static double VY_WEIGHT = 1;
     public static double OMEGA_WEIGHT = 1;
 
+    private TrajectorySequenceRunner trajectorySequenceRunner;
+
+    private static final TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(MAX_VEL, MAX_ANG_VEL, TRACK_WIDTH);
+    private static final TrajectoryAccelerationConstraint ACCEL_CONSTRAINT = getAccelerationConstraint(MAX_ACCEL);
+
     private BNO055IMU imu;
     private Orientation angles;
 
@@ -110,8 +117,6 @@ public class FFBase extends MecanumDrive {
     private MotionProfile turnProfile;
     private double turnStart;
 
-    private TrajectoryVelocityConstraint velConstraint;
-    private TrajectoryAccelerationConstraint accelConstraint;
     private TrajectoryFollower follower;
 
     private LinkedList<Pose2d> poseHistory;
@@ -139,24 +144,18 @@ public class FFBase extends MecanumDrive {
         robot.init(hardwareMap);
         //if (!IsteleOp)
             //initVuforia(hardwareMap);
+        follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
+                new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
 
         dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
 
-        clock = NanoClock.system();
+//        clock = NanoClock.system();
+//
+//        mode = Mode.IDLE;
 
-        mode = Mode.IDLE;
-
-        turnController = new PIDFController(HEADING_PID);
-        turnController.setInputBounds(0, 2 * Math.PI);
-
-        velConstraint = new MinVelocityConstraint(Arrays.asList(
-                new AngularVelocityConstraint(MAX_ANG_VEL),
-                new MecanumVelocityConstraint(MAX_VEL, TRACK_WIDTH)
-        ));
-        accelConstraint = new ProfileAccelerationConstraint(MAX_ACCEL);
-        follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
-                new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
+//        turnController = new PIDFController(HEADING_PID);
+//        turnController.setInputBounds(0, 2 * Math.PI);
 
         poseHistory = new LinkedList<>();
 
@@ -213,35 +212,51 @@ public class FFBase extends MecanumDrive {
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
         //setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap));
-        //trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
+        trajectorySequenceRunner = new TrajectorySequenceRunner(follower, HEADING_PID);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
-        return new TrajectoryBuilder(startPose, velConstraint, accelConstraint);
+        return new TrajectoryBuilder(startPose, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, boolean reversed) {
-        return new TrajectoryBuilder(startPose, reversed, velConstraint, accelConstraint);
+        return new TrajectoryBuilder(startPose, reversed, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose, double startHeading) {
-        return new TrajectoryBuilder(startPose, startHeading, velConstraint, accelConstraint);
+        return new TrajectoryBuilder(startPose, startHeading, VEL_CONSTRAINT, ACCEL_CONSTRAINT);
     }
 
-    public void turnAsync(double angle) {
-        double heading = getPoseEstimate().getHeading();
-
-        lastPoseOnTurn = getPoseEstimate();
-
-        turnProfile = MotionProfileGenerator.generateSimpleMotionProfile(
-                new MotionState(heading, 0, 0, 0),
-                new MotionState(heading + angle, 0, 0, 0),
-                MAX_ANG_VEL,
-                MAX_ANG_ACCEL
+    public TrajectorySequenceBuilder trajectorySequenceBuilder(Pose2d startPose) {
+        return new TrajectorySequenceBuilder(
+                startPose,
+                VEL_CONSTRAINT, ACCEL_CONSTRAINT,
+                MAX_ANG_VEL, MAX_ANG_ACCEL
         );
+    }
 
-        turnStart = clock.seconds();
-        mode = Mode.TURN;
+//    public void turnAsync(double angle) {
+//        double heading = getPoseEstimate().getHeading();
+//
+//        lastPoseOnTurn = getPoseEstimate();
+//
+//        turnProfile = MotionProfileGenerator.generateSimpleMotionProfile(
+//                new MotionState(heading, 0, 0, 0),
+//                new MotionState(heading + angle, 0, 0, 0),
+//                MAX_ANG_VEL,
+//                MAX_ANG_ACCEL
+//        );
+//
+//        turnStart = clock.seconds();
+//        mode = Mode.TURN;
+//    }
+
+    public void turnAsync(double angle) {
+        trajectorySequenceRunner.followTrajectorySequenceAsync(
+                trajectorySequenceBuilder(getPoseEstimate())
+                        .turn(angle)
+                        .build()
+        );
     }
 
     public void turn(double angle) {
@@ -250,8 +265,20 @@ public class FFBase extends MecanumDrive {
     }
 
     public void followTrajectoryAsync(Trajectory trajectory) {
-        follower.followTrajectory(trajectory);
-        mode = Mode.FOLLOW_TRAJECTORY;
+        trajectorySequenceRunner.followTrajectorySequenceAsync(
+                trajectorySequenceBuilder(trajectory.start())
+                        .addTrajectory(trajectory)
+                        .build()
+        );
+    }
+
+    public void followTrajectorySequenceAsync(TrajectorySequence trajectorySequence) {
+        trajectorySequenceRunner.followTrajectorySequenceAsync(trajectorySequence);
+    }
+
+    public void followTrajectorySequence(TrajectorySequence trajectorySequence) {
+        followTrajectorySequenceAsync(trajectorySequence);
+        waitForIdle();
     }
 
     public void followTrajectory(Trajectory trajectory) {
@@ -264,102 +291,112 @@ public class FFBase extends MecanumDrive {
     }
 
     public Pose2d getLastError() {
-        switch (mode) {
-            case FOLLOW_TRAJECTORY:
-                return follower.getLastError();
-            case TURN:
-                return new Pose2d(0, 0, turnController.getLastError());
-            case IDLE:
-                return new Pose2d();
-        }
-        throw new AssertionError();
+        return trajectorySequenceRunner.getLastPoseError();
     }
+
+//    public Pose2d getLastError() {
+//        switch (mode) {
+//            case FOLLOW_TRAJECTORY:
+//                return follower.getLastError();
+//            case TURN:
+//                return new Pose2d(0, 0, turnController.getLastError());
+//            case IDLE:
+//                return new Pose2d();
+//        }
+//        throw new AssertionError();
+//    }
+
+//    public void update() {
+//        updatePoseEstimate();
+//
+//        Pose2d currentPose = getPoseEstimate();
+//        Pose2d lastError = getLastError();
+//
+//        poseHistory.add(currentPose);
+//
+//        if (POSE_HISTORY_LIMIT > -1 && poseHistory.size() > POSE_HISTORY_LIMIT) {
+//            poseHistory.removeFirst();
+//        }
+//
+//        TelemetryPacket packet = new TelemetryPacket();
+//        Canvas fieldOverlay = packet.fieldOverlay();
+//
+//        packet.put("mode", mode);
+//
+//        packet.put("x", currentPose.getX());
+//        packet.put("y", currentPose.getY());
+//        packet.put("heading (deg)", Math.toDegrees(currentPose.getHeading()));
+//
+//        packet.put("xError", lastError.getX());
+//        packet.put("yError", lastError.getY());
+//        packet.put("headingError (deg)", Math.toDegrees(lastError.getHeading()));
+//
+//        switch (mode) {
+//            case IDLE:
+//                // do nothing
+//                break;
+//            case TURN: {
+//                double t = clock.seconds() - turnStart;
+//
+//                MotionState targetState = turnProfile.get(t);
+//
+//                turnController.setTargetPosition(targetState.getX());
+//
+//                double correction = turnController.update(currentPose.getHeading());
+//
+//                double targetOmega = targetState.getV();
+//                double targetAlpha = targetState.getA();
+//                setDriveSignal(new DriveSignal(new Pose2d(
+//                        0, 0, targetOmega + correction
+//                ), new Pose2d(
+//                        0, 0, targetAlpha
+//                )));
+//
+//                Pose2d newPose = lastPoseOnTurn.copy(lastPoseOnTurn.getX(), lastPoseOnTurn.getY(), targetState.getX());
+//
+//                fieldOverlay.setStroke("#4CAF50");
+//                DashboardUtil.drawRobot(fieldOverlay, newPose);
+//
+//                if (t >= turnProfile.duration()) {
+//                    mode = Mode.IDLE;
+//                    setDriveSignal(new DriveSignal());
+//                }
+//
+//                break;
+//            }
+//            case FOLLOW_TRAJECTORY: {
+//                setDriveSignal(follower.update(currentPose, getPoseVelocity()));
+//
+//                Trajectory trajectory = follower.getTrajectory();
+//
+//                fieldOverlay.setStrokeWidth(1);
+//                fieldOverlay.setStroke("#4CAF50");
+//                DashboardUtil.drawSampledPath(fieldOverlay, trajectory.getPath());
+//                double t = follower.elapsedTime();
+//                DashboardUtil.drawRobot(fieldOverlay, trajectory.get(t));
+//
+//                fieldOverlay.setStroke("#3F51B5");
+//                DashboardUtil.drawPoseHistory(fieldOverlay, poseHistory);
+//
+//                if (!follower.isFollowing()) {
+//                    mode = Mode.IDLE;
+//                    setDriveSignal(new DriveSignal());
+//                }
+//
+//                break;
+//            }
+//        }
+//
+//        fieldOverlay.setStroke("#3F51B5");
+//        DashboardUtil.drawRobot(fieldOverlay, currentPose);
+//
+//        dashboard.sendTelemetryPacket(packet);
+//    }
 
     public void update() {
         updatePoseEstimate();
-
-        Pose2d currentPose = getPoseEstimate();
-        Pose2d lastError = getLastError();
-
-        poseHistory.add(currentPose);
-
-        if (POSE_HISTORY_LIMIT > -1 && poseHistory.size() > POSE_HISTORY_LIMIT) {
-            poseHistory.removeFirst();
-        }
-
-        TelemetryPacket packet = new TelemetryPacket();
-        Canvas fieldOverlay = packet.fieldOverlay();
-
-        packet.put("mode", mode);
-
-        packet.put("x", currentPose.getX());
-        packet.put("y", currentPose.getY());
-        packet.put("heading (deg)", Math.toDegrees(currentPose.getHeading()));
-
-        packet.put("xError", lastError.getX());
-        packet.put("yError", lastError.getY());
-        packet.put("headingError (deg)", Math.toDegrees(lastError.getHeading()));
-
-        switch (mode) {
-            case IDLE:
-                // do nothing
-                break;
-            case TURN: {
-                double t = clock.seconds() - turnStart;
-
-                MotionState targetState = turnProfile.get(t);
-
-                turnController.setTargetPosition(targetState.getX());
-
-                double correction = turnController.update(currentPose.getHeading());
-
-                double targetOmega = targetState.getV();
-                double targetAlpha = targetState.getA();
-                setDriveSignal(new DriveSignal(new Pose2d(
-                        0, 0, targetOmega + correction
-                ), new Pose2d(
-                        0, 0, targetAlpha
-                )));
-
-                Pose2d newPose = lastPoseOnTurn.copy(lastPoseOnTurn.getX(), lastPoseOnTurn.getY(), targetState.getX());
-
-                fieldOverlay.setStroke("#4CAF50");
-                DashboardUtil.drawRobot(fieldOverlay, newPose);
-
-                if (t >= turnProfile.duration()) {
-                    mode = Mode.IDLE;
-                    setDriveSignal(new DriveSignal());
-                }
-
-                break;
-            }
-            case FOLLOW_TRAJECTORY: {
-                setDriveSignal(follower.update(currentPose, getPoseVelocity()));
-
-                Trajectory trajectory = follower.getTrajectory();
-
-                fieldOverlay.setStrokeWidth(1);
-                fieldOverlay.setStroke("#4CAF50");
-                DashboardUtil.drawSampledPath(fieldOverlay, trajectory.getPath());
-                double t = follower.elapsedTime();
-                DashboardUtil.drawRobot(fieldOverlay, trajectory.get(t));
-
-                fieldOverlay.setStroke("#3F51B5");
-                DashboardUtil.drawPoseHistory(fieldOverlay, poseHistory);
-
-                if (!follower.isFollowing()) {
-                    mode = Mode.IDLE;
-                    setDriveSignal(new DriveSignal());
-                }
-
-                break;
-            }
-        }
-
-        fieldOverlay.setStroke("#3F51B5");
-        DashboardUtil.drawRobot(fieldOverlay, currentPose);
-
-        dashboard.sendTelemetryPacket(packet);
+        DriveSignal signal = trajectorySequenceRunner.update(getPoseEstimate(), getPoseVelocity());
+        if (signal != null) setDriveSignal(signal);
     }
 
     public void waitForIdle() {
@@ -369,7 +406,7 @@ public class FFBase extends MecanumDrive {
     }
 
     public boolean isBusy() {
-        return mode != Mode.IDLE;
+        return trajectorySequenceRunner.isBusy();
     }
 
     public void setMode(DcMotor.RunMode runMode) {
@@ -474,33 +511,6 @@ public class FFBase extends MecanumDrive {
         return (double) -imu.getAngularVelocity().yRotationRate;
     }
 
-//    public UGCV.numRings getRingsUsingImage(boolean red) {
-//        UGCV ugvuforia = new UGCV(vuforia);
-//        return ugvuforia.GetPosition(true,red);
-//    }
-//
-//    public UGCV.numRings getRingsUsingImageandBlueCam(boolean red) {
-//        UGCV ugvuforia = new UGCV(vuforia);
-//        return ugvuforia.GetPosition(true, red, true);
-//    }
-//
-//    public void initVuforia(HardwareMap hardwareMap) {
-//        /*
-//         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-//         */
-//        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-//
-//        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-//        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
-//
-//        //  Instantiate the Vuforia engine
-//        vuforia = ClassFactory.getInstance().createVuforia(parameters);
-//
-//        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
-//    }
-//    public void closeCamera(){
-//        vuforia.getCamera().close();
-//    }
 
     public FFExpansionHubs getExpansionHubs() {
         return expansionHubs;
@@ -510,153 +520,14 @@ public class FFBase extends MecanumDrive {
         this.expansionHubs = expansionHubs;
     }
 //
-//    //Encoder based methods here:
-    public double getCurrentHeading() {
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        double angle = angles.firstAngle;
-        if (angle < 0) {
-            angle = -angle;
-        } else {
-            angle = 360 - angle;
-        }
-        return angle;
+    public static TrajectoryVelocityConstraint getVelocityConstraint(double maxVel, double maxAngularVel, double trackWidth) {
+        return new MinVelocityConstraint(Arrays.asList(
+                new AngularVelocityConstraint(maxAngularVel),
+                new MecanumVelocityConstraint(maxVel, trackWidth)
+        ));
     }
 
-    public void turnRight(double power, double heading){
-        double currHeading = getCurrentHeading();
-        while(currHeading < heading){
-            leftFront.setPower(power);
-            rightFront.setPower(-power);
-            leftRear.setPower(power);
-            rightRear.setPower(-power);
-            currHeading = getCurrentHeading();
+        public static TrajectoryAccelerationConstraint getAccelerationConstraint(double maxAccel) {
+            return new ProfileAccelerationConstraint(maxAccel);
         }
-    }
-
-    public void turnLeft(double power, double heading){
-        double currHeading = getCurrentHeading();
-        while(currHeading < heading){
-            leftFront.setPower(-power);
-            rightFront.setPower(power);
-            leftRear.setPower(-power);
-            rightRear.setPower(power);
-            currHeading = getCurrentHeading();
-        }
-    }
-
-    public void forward(double power, int position){
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + position);
-        rightFront.setTargetPosition(rightFront.getCurrentPosition() + position);
-        leftRear.setTargetPosition(leftRear.getCurrentPosition() + position);
-        rightRear.setTargetPosition(rightRear.getCurrentPosition() + position);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        setMotorPowers(power, power,power, power);
-
-        while(leftFront.isBusy() && rightFront.isBusy() && leftRear.isBusy() && rightRear.isBusy()){
-
-        }
-        setMotorPowers(0,0,0,0);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    public void backward(double power, int position){
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + -position);
-        rightFront.setTargetPosition(rightFront.getCurrentPosition() + -position);
-        leftRear.setTargetPosition(leftRear.getCurrentPosition() + -position);
-        rightRear.setTargetPosition(rightRear.getCurrentPosition() + -position);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        setMotorPowers(-power, -power,-power, -power);
-
-        while(leftFront.isBusy() && rightFront.isBusy() && leftRear.isBusy() && rightRear.isBusy()){
-
-        }
-        setMotorPowers(0,0,0,0);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    public void strafeLeft(double power, int position){
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + -position);
-        rightFront.setTargetPosition(rightFront.getCurrentPosition() + position);
-        leftRear.setTargetPosition(leftRear.getCurrentPosition() + position);
-        rightRear.setTargetPosition(rightRear.getCurrentPosition() + -position);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        setMotorPowers(-power, power,-power, power);
-
-        while(leftFront.isBusy() && rightFront.isBusy() && leftRear.isBusy() && rightRear.isBusy()){
-
-        }
-        setMotorPowers(0,0,0,0);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    public void strafeRight(double power, int position){
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + position);
-        rightFront.setTargetPosition(rightFront.getCurrentPosition() + -position);
-        leftRear.setTargetPosition(leftRear.getCurrentPosition() + -position);
-        rightRear.setTargetPosition(rightRear.getCurrentPosition() + position);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightRear.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        setMotorPowers(power, -power,power, -power);
-
-        while(leftFront.isBusy() && rightFront.isBusy() && leftRear.isBusy() && rightRear.isBusy()){
-
-        }
-        setMotorPowers(0,0,0,0);
-
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
 }
