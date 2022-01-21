@@ -81,6 +81,7 @@ public class TFODTest extends FreightFrenzyRobot {
 
         if (getEnhancedGamepad1().isA()){
             telemetry.addLine("A Pressed");
+//            pipeline.saveMatToDisk(pipeline.getFirstMat(), "mat");
             webcam.stopStreaming();
         }
         else if(getEnhancedGamepad1().isB()){
@@ -111,12 +112,19 @@ public class TFODTest extends FreightFrenzyRobot {
          * It will be returned by getMat()
          */
         Mat mat = new Mat();
+        Mat firstMat = new Mat();
+        boolean done = false;
 
         @Override
         public Mat processFrame(Mat input) {
             Size dim = new Size(320, 320);
             Imgproc.resize(input, mat, dim);
-//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_YUV2RGB);
+//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA);
+            if(!done){
+                done = true;
+                firstMat = mat;
+                saveMatToDisk(firstMat, "firstMat");
+            }
             return mat;
         }
 
@@ -134,6 +142,10 @@ public class TFODTest extends FreightFrenzyRobot {
 
         Mat getMat(){
             return mat;
+        }
+
+        Mat getFirstMat(){
+            return firstMat;
         }
     }
 }

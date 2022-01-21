@@ -24,15 +24,14 @@ public class BlueRightAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final int Traj1 = 3;
-    static final int Turn1 = -90;
-    static final int Traj2 = 26;
-    static final Vector2d Traj3 = new Vector2d(-12,40);
+    static final Pose2d Traj1 = new Pose2d(-54.5,60,Math.toRadians(-180));
+    static final double angleForTraj1 = Math.toRadians(180);
+    static final Vector2d Traj2 = new Vector2d(-12,40);
+    static final double angleForTraj2 = Math.toRadians(-180);
+    static final Vector2d Traj3 = new Vector2d(-28, 60);
     static final double angleForTraj3 = Math.toRadians(-180);
-    static final Vector2d Traj4 = new Vector2d(-28, 60);
-    static final double angleForTraj4 = Math.toRadians(-180);
-    static final Pose2d Traj5 = new Pose2d(-55,40,Math.toRadians(-180));
-    static final double angleForTraj5 = Math.toRadians(180);
+    static final Pose2d Traj4 = new Pose2d(-57,40,Math.toRadians(0));
+    static final double angleForTraj4 = Math.toRadians(180);
 
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -65,28 +64,24 @@ public class BlueRightAuto extends LinearOpMode {
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
         TrajectorySequence traj1 = drive.trajectorySequenceBuilder(startPose)
-                .forward(Traj1)
+                .splineToLinearHeading(Traj1, angleForTraj1)
                 .build();
 
         //90 degree rotation in between: drive.turn(Math.toRadians(90));
 
-        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end().plus(new Pose2d(0, 0, Math.toRadians(Traj1)))) //Have to add this because of the turn (last position is not traj0.end())
-                .forward(Traj2)
-                .build();
-
         //Spin carousel
 
-        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(traj2.end())
-                .splineToConstantHeading(Traj3, angleForTraj3)
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end())
+                .lineTo(Traj2)
                 .build();
 
         //Drop pre-loaded stone
 
         //Pickup dropper
 
-        TrajectorySequence traj4 = drive.trajectorySequenceBuilder(traj3.end())//Stop carousel
-                .splineToConstantHeading(Traj4, angleForTraj4)
-                .splineToLinearHeading(Traj5, angleForTraj5)
+        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(traj2.end())//Stop carousel
+                .splineToConstantHeading(Traj3, angleForTraj3)
+                .splineToLinearHeading(Traj4, angleForTraj4)
                 .build();
 
         drive.getExpansionHubs().update(getDt());
@@ -101,7 +96,7 @@ public class BlueRightAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        currentState = State.WAIT0;
+        currentState = State.TOCAROUSEL;
 
         while (opModeIsActive() && !isStopRequested()) {
 
@@ -109,18 +104,19 @@ public class BlueRightAuto extends LinearOpMode {
 
             switch (currentState) {
 
-                case WAIT0:
-                    if (waitTimer.milliseconds() >= 100) {
-                        drive.followTrajectorySequenceAsync(traj1);
-                        currentState = State.TOCAROUSEL;
-                        waitTimer.reset();
-                    }
-                    break;
+//                case WAIT0:
+//                    if (waitTimer.milliseconds() >= 100) {
+//                        drive.followTrajectorySequenceAsync(traj1);
+//                        telemetry.addLine("in the wait0 state");
+//                        currentState = State.TOCAROUSEL;
+//                        waitTimer.reset();
+//                    }
+//                    break;
 
                 case TOCAROUSEL:
-                    if (!drive.isBusy()) {
-                        drive.turn(Math.toRadians(Turn1)); //This is traj1
-                        drive.followTrajectorySequenceAsync(traj2);
+                    if (waitTimer.milliseconds() >= 100) {
+                        //drive.turn(Math.toRadians(Turn1)); //This is traj1
+                        drive.followTrajectorySequenceAsync(traj1);
                         currentState = State.SPIN;
                         waitTimer.reset();
                     }
@@ -138,7 +134,7 @@ public class BlueRightAuto extends LinearOpMode {
                 case TOHUB:
                     if(waitTimer.milliseconds() >= 2500) { //TODO: Spin for one second?
                         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
-                        drive.followTrajectorySequenceAsync(traj3);
+                        drive.followTrajectorySequenceAsync(traj2);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
                         currentState = State.DROPRIGHT;
                         waitTimer.reset();
@@ -164,7 +160,7 @@ public class BlueRightAuto extends LinearOpMode {
 
                 case TOPARK:
                     if(waitTimer.milliseconds() > 1000) {
-                        drive.followTrajectorySequenceAsync(traj4);
+                        drive.followTrajectorySequenceAsync(traj3);
                         currentState = State.IDLE;
                         waitTimer.reset();
                     }
@@ -184,7 +180,7 @@ public class BlueRightAuto extends LinearOpMode {
             drive.robot.getDropperLeftSubsystem().update(getDt());
             drive.robot.getDropperRightSubsystem().update(getDt());
             drive.robot.getIntakeMotorSubsystem().update(getDt());
-
+            telemetry.update();
         }
 
         drive.setMotorPowers(0.0,0.0,0.0,0.0);
