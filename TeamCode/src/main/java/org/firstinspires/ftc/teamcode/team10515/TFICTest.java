@@ -4,29 +4,29 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
-
-import org.outoftheboxrobotics.tensorflowapi.ObjectDetection.TFODBuilder;
+import org.outoftheboxrobotics.tensorflowapi.ImageClassification.TFICBuilder;
+import org.outoftheboxrobotics.tensorflowapi.ImageClassification.TensorImageClassifier;
 import org.outoftheboxrobotics.tensorflowapi.ObjectDetection.TensorObjectDetector;
 
 import java.io.IOException;
 import java.util.List;
 
-@TeleOp(name="TFOD Test", group="Test")
-public class TFODTest extends FreightFrenzyRobot {
+@TeleOp(name="TFIC Test", group="Test")
+public class TFICTest extends FreightFrenzyRobot {
 
     /* Declare OpMode members. */
 
     OpenCvWebcam webcam;
     SamplePipeline pipeline;
-    TensorObjectDetector tfod;
-    List<TensorObjectDetector.Detection> detections;
+    TensorImageClassifier tfic;
+    List<TensorImageClassifier.Recognition> recognitions;
 
     @Override
     public void init(){
@@ -52,7 +52,7 @@ public class TFODTest extends FreightFrenzyRobot {
         });
 
         try {
-            tfod = new TFODBuilder(hardwareMap, "converted_model.tflite", "element").build();
+            tfic = new TFICBuilder(hardwareMap, "converted_modelTFIC.tflite", "left", "right", "center").build();
             telemetry.addLine("Successful build of model");
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,11 +90,9 @@ public class TFODTest extends FreightFrenzyRobot {
         }
         else if (getEnhancedGamepad1().isY()){
             telemetry.addLine("Y Pressed");
-//            detections = tfod.recognize(pipeline.getMat());
-            detections = tfod.recognize(pipeline.getFirstMat()); //TODO: Try this line
-            telemetry.addLine("Size of list: " + detections.size());
-//            telemetry.addLine("Left most coordinate of bounding box: " + detections.get(0).getLocation().left);
-//            telemetry.addLine("Confidence: " + detections.get(0).getConfidence());
+            recognitions = tfic.recognize(pipeline.getFirstMat());
+            telemetry.addLine("Size of list: " + recognitions.size());
+//            telemetry.addLine("Highest recognition: " + recognitions.get(0).getTitle());
             while(!getEnhancedGamepad1().isB()){
                 telemetry.addLine("Press B to continue");
                 telemetry.update();
@@ -120,10 +118,9 @@ public class TFODTest extends FreightFrenzyRobot {
         public Mat processFrame(Mat input) {
             Size dim = new Size(320, 320);
             Imgproc.resize(input, mat, dim);
-//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2BGR); //TODO: Try this line
+//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA);
             if(!done){
                 done = true;
-//                firstMat = mat.clone(); //TODO: Try this line
                 firstMat = mat;
                 saveMatToDisk(firstMat, "firstMat");
             }
