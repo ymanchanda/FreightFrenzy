@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.team10515.auto;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperLeftStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperRightStateMachine;
@@ -21,30 +24,32 @@ public class BlueRightDefenseAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final int Traj0 = 40;
-    static final int Traj1 = 4;
-    static final int Traj2 = 30;
+    static final Vector2d Traj1 = new Vector2d(-24,-23);
+    static final double angleforTraj1 = Math.toRadians(90);
+    static final Vector2d Traj2 = new Vector2d(-54,-23);
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     enum State {
         WAIT0,
-        TRAJ1,
-        DROPLEFT,
-        PICKUPLEFT,
-        TRAJ2,
+        TOCAROUSEL,
+        SPIN, //spin carousel
+        TOHUB,
+        DROPLEFT, //bring the right dropper in drop position
+        PICKUPLEFT, //bring the right dropper in pickup position
+        TOPARK,
         IDLE
     }
-
     State currentState = State.IDLE;
 
-    //Pose2d startPose = new Pose2d(-62.375, -15, Math.toRadians(0));
+    Pose2d startPose = new Pose2d(-28, 63, Math.toRadians(-90));
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
 
         drive = new FFBase(hardwareMap);
+        drive.setPoseEstimate(startPose);
 
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
@@ -52,16 +57,12 @@ public class BlueRightDefenseAuto extends LinearOpMode {
         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
-        Trajectory traj0 = drive.trajectoryBuilder(new Pose2d())
-                .forward(Traj0)
+        TrajectorySequence traj1 = drive.trajectorySequenceBuilder(startPose)
+                .splineTo(Traj1, angleforTraj1)
                 .build();
 
-        Trajectory traj1 = drive.trajectoryBuilder(traj0.end())
-                .strafeLeft(Traj1)
-                .build();
-
-        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
-                .strafeRight(Traj2)
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end())
+                .strafeTo(Traj2)
                 .build();
 
 
@@ -77,7 +78,7 @@ public class BlueRightDefenseAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        currentState = State.WAIT0;
+        currentState = State.TOHUB;
 
         while (opModeIsActive() && !isStopRequested()) {
 
@@ -85,25 +86,16 @@ public class BlueRightDefenseAuto extends LinearOpMode {
 
             switch (currentState) {
 
-                case WAIT0:
-                    if (waitTimer.milliseconds() >= 100) {
-                        drive.followTrajectoryAsync(traj0);
-                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-                        currentState = State.TRAJ1;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ1:
+                case TOHUB:
                     if (!drive.isBusy()){
-                        drive.followTrajectoryAsync(traj1);
+                        drive.followTrajectorySequenceAsync(traj1);
                         currentState = State.DROPLEFT;
                         waitTimer.reset();
                     }
 
                 case DROPLEFT:
                     if(!drive.isBusy()){
-                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
+                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
                         currentState = State.PICKUPLEFT;
                         waitTimer.reset();
                     }
@@ -111,16 +103,16 @@ public class BlueRightDefenseAuto extends LinearOpMode {
 
                 case PICKUPLEFT:
                     if(waitTimer.milliseconds() > 1000){
-                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
+                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-                        currentState = State.TRAJ2;
+                        currentState = State.TOPARK;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ2:
+                case TOPARK:
                     if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj2);
+                        drive.followTrajectorySequenceAsync(traj2);
                         currentState = State.IDLE;
                         waitTimer.reset();
                     }

@@ -22,47 +22,43 @@ public class RedLeftDefenseAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final int Traj0 = 40;
-    static final int Traj1 = 4;
-    static final int Traj2 = 30;
+    static final Vector2d Traj1 = new Vector2d(-24,-23);
+    static final double angleforTraj1 = Math.toRadians(90);
+    static final Vector2d Traj2 = new Vector2d(-54,-23);
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     enum State {
         WAIT0,
-        TRAJ1,
-        DROPRIGHT,
-        PICKUPRIGHT,
-        TRAJ2,
+        TOCAROUSEL,
+        SPIN, //spin carousel
+        TOHUB,
+        DROPRIGHT, //bring the right dropper in drop position
+        PICKUPRIGHT, //bring the right dropper in pickup position
+        TOPARK,
         IDLE
     }
-
     State currentState = State.IDLE;
 
-    //Pose2d startPose = new Pose2d(-62.375, -15, Math.toRadians(0));
-
+    Pose2d startPose = new Pose2d(-28,-63, Math.toRadians(90));
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
 
         drive = new FFBase(hardwareMap);
-
+        drive.setPoseEstimate(startPose);
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP); //Changed from init to pickup
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
-        Trajectory traj0 = drive.trajectoryBuilder(new Pose2d())
-                .forward(Traj0)
-                .build();
-
-        Trajectory traj1 = drive.trajectoryBuilder(traj0.end())
-                .strafeRight(Traj1)
+        Trajectory traj1 = drive.trajectoryBuilder(startPose)
+                .splineTo(Traj1, angleforTraj1)
                 .build();
 
         Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
-                .strafeLeft(Traj2)
+                .strafeTo(Traj2)
                 .build();
 
 
@@ -78,7 +74,7 @@ public class RedLeftDefenseAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        currentState = State.WAIT0;
+        currentState = State.TOHUB;
 
         while (opModeIsActive() && !isStopRequested()) {
 
@@ -86,16 +82,8 @@ public class RedLeftDefenseAuto extends LinearOpMode {
 
             switch (currentState) {
 
-                case WAIT0:
-                    if (waitTimer.milliseconds() >= 100) {
-                        drive.followTrajectoryAsync(traj0);
-                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-                        currentState = State.TRAJ1;
-                        waitTimer.reset();
-                    }
-                    break;
 
-                case TRAJ1:
+                case TOHUB:
                     if (!drive.isBusy()){
                         drive.followTrajectoryAsync(traj1);
                         currentState = State.DROPRIGHT;
@@ -114,12 +102,12 @@ public class RedLeftDefenseAuto extends LinearOpMode {
                     if(waitTimer.milliseconds() > 1000){
                         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-                        currentState = State.TRAJ2;
+                        currentState = State.TOPARK;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ2:
+                case TOPARK:
                     if (!drive.isBusy()) {
                         drive.followTrajectoryAsync(traj2);
                         currentState = State.IDLE;

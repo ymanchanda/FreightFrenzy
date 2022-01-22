@@ -25,13 +25,13 @@ public class RedLeftAuto extends LinearOpMode {
     private static TimeProfiler updateRuntime;
 
     static final Pose2d Traj1 = new Pose2d(-54.5,-60,Math.toRadians(180));
-    static final double angleForTraj1 = Math.toRadians(180);
-    static final Vector2d Traj2 = new Vector2d(-12,-40);
+    static final double angleForTraj1 = Math.toRadians(-180);
+    static final Vector2d Traj2 = new Vector2d(-12,-39);
     static final double angleForTraj2 = Math.toRadians(-180);
     static final Vector2d Traj3 = new Vector2d(-28, -60);
     static final double angleForTraj3 = Math.toRadians(-180);
-    static final Pose2d Traj4 = new Pose2d(-57,-40,Math.toRadians(0));
-    static final double angleForTraj4 = Math.toRadians(180);
+    static final Pose2d Traj4 = new Pose2d(-57,-38,Math.toRadians(0));
+    static final double angleForTraj4 = Math.toRadians(-180);
 
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -56,7 +56,7 @@ public class RedLeftAuto extends LinearOpMode {
         setUpdateRuntime(new TimeProfiler(false));
 
         drive = new FFBase(hardwareMap);
-
+        drive.setPoseEstimate(startPose);
         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.IDLE);
         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.INIT);
@@ -125,7 +125,7 @@ public class RedLeftAuto extends LinearOpMode {
                 case SPIN:
 //                    drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                     if(!drive.isBusy()) {
-                        drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.BLUE);
+                        drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.RED);
                         currentState = State.TOHUB;
                         waitTimer.reset();
                     }
@@ -143,7 +143,7 @@ public class RedLeftAuto extends LinearOpMode {
 
                 case DROPRIGHT:
                     if(!drive.isBusy()){
-                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
+                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
                         currentState = State.PICKUPRIGHT;
                         waitTimer.reset();
                     }
@@ -151,7 +151,7 @@ public class RedLeftAuto extends LinearOpMode {
 
                 case PICKUPRIGHT:
                     if(waitTimer.milliseconds() > 1000){
-                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
+                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
                         currentState = State.TOPARK;
                         waitTimer.reset();
@@ -180,7 +180,7 @@ public class RedLeftAuto extends LinearOpMode {
             drive.robot.getDropperLeftSubsystem().update(getDt());
             drive.robot.getDropperRightSubsystem().update(getDt());
             drive.robot.getIntakeMotorSubsystem().update(getDt());
-
+            telemetry.update();
         }
 
         drive.setMotorPowers(0.0,0.0,0.0,0.0);
