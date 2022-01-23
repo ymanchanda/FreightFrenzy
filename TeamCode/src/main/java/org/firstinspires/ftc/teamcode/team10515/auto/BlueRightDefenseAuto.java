@@ -24,9 +24,9 @@ public class BlueRightDefenseAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final Vector2d Traj1 = new Vector2d(-24,-23);
-    static final double angleforTraj1 = Math.toRadians(90);
-    static final Vector2d Traj2 = new Vector2d(-54,-23);
+    static final Vector2d Traj1 = new Vector2d(-24,23);
+    static final double angleforTraj1 = Math.toRadians(-90);
+    static final Vector2d Traj2 = new Vector2d(-54,23);
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -89,13 +89,14 @@ public class BlueRightDefenseAuto extends LinearOpMode {
                 case TOHUB:
                     if (!drive.isBusy()){
                         drive.followTrajectorySequenceAsync(traj1);
+                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
                         currentState = State.DROPLEFT;
                         waitTimer.reset();
                     }
 
                 case DROPLEFT:
                     if(!drive.isBusy()){
-                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.DROPOFF);
+                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
                         currentState = State.PICKUPLEFT;
                         waitTimer.reset();
                     }
@@ -103,7 +104,7 @@ public class BlueRightDefenseAuto extends LinearOpMode {
 
                 case PICKUPLEFT:
                     if(waitTimer.milliseconds() > 1000){
-                        drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.PICKUP);
+                        drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
                         currentState = State.TOPARK;
                         waitTimer.reset();
@@ -111,7 +112,7 @@ public class BlueRightDefenseAuto extends LinearOpMode {
                     break;
 
                 case TOPARK:
-                    if (!drive.isBusy()) {
+                    if (waitTimer.milliseconds() > 1000) {
                         drive.followTrajectorySequenceAsync(traj2);
                         currentState = State.IDLE;
                         waitTimer.reset();

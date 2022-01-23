@@ -27,6 +27,7 @@ public class TFICTest extends FreightFrenzyRobot {
     SamplePipeline pipeline;
     TensorImageClassifier tfic;
     List<TensorImageClassifier.Recognition> recognitions;
+    boolean ready = false;
 
     @Override
     public void init(){
@@ -52,7 +53,7 @@ public class TFICTest extends FreightFrenzyRobot {
         });
 
         try {
-            tfic = new TFICBuilder(hardwareMap, "converted_modelTFIC.tflite", "left", "right", "center").build();
+            tfic = new TFICBuilder(hardwareMap, "converted_modelTFIC.tflite", "center", "left", "right").build();
             telemetry.addLine("Successful build of model");
         } catch (IOException e) {
             e.printStackTrace();
@@ -78,6 +79,14 @@ public class TFICTest extends FreightFrenzyRobot {
         telemetry.addData("Pipeline time ms", webcam.getPipelineTimeMs());
         telemetry.addData("Overhead time ms", webcam.getOverheadTimeMs());
         telemetry.addData("Theoretical max FPS", webcam.getCurrentPipelineMaxFps());
+        if(ready){
+            telemetry.addData("Zoom: ", webcam.getPtzControl().getZoom());
+            webcam.getPtzControl().setZoom(-1);
+            telemetry.addData("Max zoom: ", webcam.getPtzControl().getMaxZoom());
+            telemetry.addData("Min zoom: ", webcam.getPtzControl().getMinZoom());
+            telemetry.addLine("Size of list: " + recognitions.size());
+            telemetry.addLine("Highest recognition: " + recognitions.get(0).getTitle() + recognitions.get(0).getConfidence());
+        }
 
         if (getEnhancedGamepad1().isA()){
             telemetry.addLine("A Pressed");
@@ -91,12 +100,7 @@ public class TFICTest extends FreightFrenzyRobot {
         else if (getEnhancedGamepad1().isY()){
             telemetry.addLine("Y Pressed");
             recognitions = tfic.recognize(pipeline.getFirstMat());
-            telemetry.addLine("Size of list: " + recognitions.size());
-//            telemetry.addLine("Highest recognition: " + recognitions.get(0).getTitle());
-            while(!getEnhancedGamepad1().isB()){
-                telemetry.addLine("Press B to continue");
-                telemetry.update();
-            }
+            ready = true;
 
         }
         telemetry.update();

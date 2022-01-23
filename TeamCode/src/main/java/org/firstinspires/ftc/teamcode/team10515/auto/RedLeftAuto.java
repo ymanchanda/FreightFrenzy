@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.team10515.auto;
 
+import static com.sun.tools.javac.util.LayoutCharacters.FF;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -17,6 +19,9 @@ import org.firstinspires.ftc.teamcode.lib.util.TimeProfiler;
 import org.firstinspires.ftc.teamcode.lib.util.TimeUnits;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+//TFIC imports
+import org.firstinspires.ftc.teamcode.team10515.auto.FFCV;
+
 @Autonomous(name = "Red Left", group = "XtremeV")
 public class RedLeftAuto extends LinearOpMode {
     static final double COUNTS_PER_INCH = (383.6 * 0.5)/(3.77953 * 3.1415);
@@ -24,13 +29,13 @@ public class RedLeftAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final Pose2d Traj1 = new Pose2d(-54.5,-60,Math.toRadians(180));
+    static final Pose2d Traj1 = new Pose2d(-58.5,-60,Math.toRadians(180));
     static final double angleForTraj1 = Math.toRadians(-180);
-    static final Vector2d Traj2 = new Vector2d(-12,-39);
+    static final Vector2d Traj2 = new Vector2d(-14,-41.6);
     static final double angleForTraj2 = Math.toRadians(-180);
     static final Vector2d Traj3 = new Vector2d(-28, -60);
     static final double angleForTraj3 = Math.toRadians(-180);
-    static final Pose2d Traj4 = new Pose2d(-57,-38,Math.toRadians(0));
+    static final Pose2d Traj4 = new Pose2d(-58,-38,Math.toRadians(0));
     static final double angleForTraj4 = Math.toRadians(-180);
 
 
@@ -50,7 +55,12 @@ public class RedLeftAuto extends LinearOpMode {
 
     State currentState = State.IDLE;
 
-    Pose2d startPose = new Pose2d(-28, -63, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(-32.35, -63.25, Math.toRadians(90));
+
+    FFCV ffcv = new FFCV();
+    boolean hasCVInit = false;
+    String placement = "right";
+    float confidence = 0;
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
@@ -96,6 +106,17 @@ public class RedLeftAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
+        ffcv.init(hardwareMap);
+        while(ffcv.getFrameCount() == 0){
+            telemetry.addData("Waiting", ffcv.getFrameCount());
+        }
+        telemetry.addLine("CV Init done");
+        ffcv.recognize(true);
+        placement = ffcv.getPlacement();
+        confidence = ffcv.getConfidence();
+        telemetry.addData("Placement: ", placement);
+        telemetry.addData("Confidence: ", confidence);
+
         currentState = State.TOCAROUSEL;
 
         while (opModeIsActive() && !isStopRequested()) {
@@ -135,7 +156,12 @@ public class RedLeftAuto extends LinearOpMode {
                     if(waitTimer.milliseconds() >= 2500) { //TODO: Spin for one second?
                         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
                         drive.followTrajectorySequenceAsync(traj2);
-                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
+                        if (placement == "left"){
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDMIDDLE);
+                        }
+                        else{
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
+                        }
                         currentState = State.DROPRIGHT;
                         waitTimer.reset();
                     }

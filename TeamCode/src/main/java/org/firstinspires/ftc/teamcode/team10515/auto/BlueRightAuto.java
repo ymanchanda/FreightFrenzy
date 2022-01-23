@@ -24,14 +24,14 @@ public class BlueRightAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final Pose2d Traj1 = new Pose2d(-54.5,60,Math.toRadians(-180));
+    static final Pose2d Traj1 = new Pose2d(-59.5,60,Math.toRadians(-180));
     static final double angleForTraj1 = Math.toRadians(180);
-    static final Vector2d Traj2 = new Vector2d(-12,40);
+    static final Vector2d Traj2 = new Vector2d(-14,41.6);
     static final double angleForTraj2 = Math.toRadians(-180);
     static final Vector2d Traj3 = new Vector2d(-28, 60);
     static final double angleForTraj3 = Math.toRadians(-180);
-    static final Pose2d Traj4 = new Pose2d(-57,40,Math.toRadians(0));
-    static final double angleForTraj4 = Math.toRadians(180);
+    static final Pose2d Traj4 = new Pose2d(-58,38,Math.toRadians(0));
+    static final double angleForTraj4 = Math.toRadians(-180);
 
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -42,15 +42,20 @@ public class BlueRightAuto extends LinearOpMode {
         TOCAROUSEL,
         SPIN, //spin carousel
         TOHUB,
-        DROPRIGHT, //bring the right dropper in drop position
-        PICKUPRIGHT, //bring the right dropper in pickup position
+        DROPLEFT, //bring the right dropper in drop position
+        PICKUPLEFT, //bring the right dropper in pickup position
         TOPARK,
         IDLE
     }
 
     State currentState = State.IDLE;
 
-    Pose2d startPose = new Pose2d(-28, 63, Math.toRadians(-90));
+    Pose2d startPose = new Pose2d(-32.35, 63.25, Math.toRadians(-90));
+
+    FFCV ffcv = new FFCV();
+    boolean hasCVInit = false;
+    String placement = "right";
+    float confidence = 0;
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
@@ -96,6 +101,17 @@ public class BlueRightAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
+        ffcv.init(hardwareMap);
+        while(ffcv.getFrameCount() == 0){
+            telemetry.addData("Waiting", ffcv.getFrameCount());
+        }
+        telemetry.addLine("CV Init done");
+        ffcv.recognize(true);
+        placement = ffcv.getPlacement();
+        confidence = ffcv.getConfidence();
+        telemetry.addData("Placement: ", placement);
+        telemetry.addData("Confidence: ", confidence);
+
         currentState = State.TOCAROUSEL;
 
         while (opModeIsActive() && !isStopRequested()) {
@@ -135,21 +151,26 @@ public class BlueRightAuto extends LinearOpMode {
                     if(waitTimer.milliseconds() >= 2500) { //TODO: Spin for one second?
                         drive.robot.getCarouselSubsystem().getStateMachine().updateState(CarouselStateMachine.State.IDLE);
                         drive.followTrajectorySequenceAsync(traj2);
-                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-                        currentState = State.DROPRIGHT;
+                        if (placement == "right" && confidence > 0.93){
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDMIDDLE);
+                        }
+                        else{
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
+                        }
+                        currentState = State.DROPLEFT;
                         waitTimer.reset();
                     }
                     break;
 
-                case DROPRIGHT:
+                case DROPLEFT:
                     if(!drive.isBusy()){
                         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.DROPOFF);
-                        currentState = State.PICKUPRIGHT;
+                        currentState = State.PICKUPLEFT;
                         waitTimer.reset();
                     }
                     break;
 
-                case PICKUPRIGHT:
+                case PICKUPLEFT:
                     if(waitTimer.milliseconds() > 1000){
                         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);

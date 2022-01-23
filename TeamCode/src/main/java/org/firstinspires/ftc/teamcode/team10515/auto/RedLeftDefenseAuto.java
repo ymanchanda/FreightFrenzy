@@ -86,6 +86,7 @@ public class RedLeftDefenseAuto extends LinearOpMode {
                 case TOHUB:
                     if (!drive.isBusy()){
                         drive.followTrajectoryAsync(traj1);
+                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
                         currentState = State.DROPRIGHT;
                         waitTimer.reset();
                     }
@@ -108,7 +109,7 @@ public class RedLeftDefenseAuto extends LinearOpMode {
                     break;
 
                 case TOPARK:
-                    if (!drive.isBusy()) {
+                    if (waitTimer.milliseconds() > 1000) {
                         drive.followTrajectoryAsync(traj2);
                         currentState = State.IDLE;
                         waitTimer.reset();

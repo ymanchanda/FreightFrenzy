@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.team10515.auto;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.teamcode.team10515.odometery.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.team10515.states.CarouselStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperLeftStateMachine;
 import org.firstinspires.ftc.teamcode.team10515.states.DropperRightStateMachine;
@@ -21,31 +24,31 @@ public class RedRightAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final int Traj0 = 40;
-    static final int Traj1 = 5;
-    static final int Traj2 = 30;
-    static final int Traj3 = -90; //Angle
-    static final int Traj4 = 11;
-    static final int Traj5 = 40;
-
+    static final Vector2d Traj1 = new Vector2d(5.9,-24);
+    static final double angleForTraj1 = Math.toRadians(90);
+    static final Pose2d Traj2 = new Pose2d(-6,-55,Math.toRadians(0));
+    static final double angleForTraj2 = Math.toRadians(180);
+    static final Vector2d Traj3 = new Vector2d(0, -67.5);
+    static final Vector2d Traj4 = new Vector2d(49,-67.5);
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     enum State {
-        WAIT0,
-        TRAJ1,
-        DROPLEFT,
-        PICKUPLEFT,
-        TRAJ2,
-        TRAJ3,
-        TRAJ4,
-        TRAJ5,
+        TOHUB,
+        BACKTOSTART,
+        DROPLEFT, //bring the right dropper in drop position
+        PICKUPLEFT, //bring the right dropper in pickup position
+        TOPARK,
         IDLE
     }
-
     State currentState = State.IDLE;
 
-    Pose2d startPose = new Pose2d(14, -63, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(8.5, -63, Math.toRadians(90));
+
+    FFCV ffcv = new FFCV();
+    boolean hasCVInit = false;
+    String placement = "right";
+    float confidence = 0;
 
     public void runOpMode() throws InterruptedException {
         setUpdateRuntime(new TimeProfiler(false));
@@ -58,26 +61,19 @@ public class RedRightAuto extends LinearOpMode {
         drive.robot.getDropperRightSubsystem().getStateMachine().updateState(DropperRightStateMachine.State.INIT);
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
-        Trajectory traj0 = drive.trajectoryBuilder(startPose)
-                .forward(Traj0)
+        TrajectorySequence traj1 = drive.trajectorySequenceBuilder(startPose)
+                .splineTo(Traj1, angleForTraj1)
                 .build();
 
-        Trajectory traj1 = drive.trajectoryBuilder(traj0.end())
-                .strafeLeft(Traj1)
+        TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end())
+                //.strafeTo(Traj2)
+                .splineToLinearHeading(Traj2, angleForTraj2)
+                .lineTo(Traj3)
                 .build();
 
-        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
-                .back(Traj2)
+        TrajectorySequence traj3 = drive.trajectorySequenceBuilder(traj2.end())
+                .lineTo(Traj4)
                 .build();
-
-        Trajectory traj4 = drive.trajectoryBuilder(traj2.end().plus(new Pose2d(0, 0, Math.toRadians(Traj3))))
-                .strafeRight(Traj4)
-                .build();
-
-        Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
-                .forward(Traj5)
-                .build();
-
 
         drive.getExpansionHubs().update(getDt());
 
@@ -91,7 +87,18 @@ public class RedRightAuto extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        currentState = State.WAIT0;
+        ffcv.init(hardwareMap);
+        while(ffcv.getFrameCount() == 0){
+            telemetry.addData("Waiting", ffcv.getFrameCount());
+        }
+        telemetry.addLine("CV Init done");
+        ffcv.recognize(true);
+        placement = ffcv.getPlacement();
+        confidence = ffcv.getConfidence();
+        telemetry.addData("Placement: ", placement);
+        telemetry.addData("Confidence: ", confidence);
+
+        currentState = State.TOHUB;
 
         while (opModeIsActive() && !isStopRequested()) {
 
@@ -99,21 +106,19 @@ public class RedRightAuto extends LinearOpMode {
 
             switch (currentState) {
 
-                case WAIT0:
+                case TOHUB:
                     if (waitTimer.milliseconds() >= 100) {
-                        drive.followTrajectoryAsync(traj0);
-                        drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
-                        currentState = State.TRAJ1;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ1:
-                    if (!drive.isBusy()){
-                        drive.followTrajectoryAsync(traj1);
+                        drive.followTrajectorySequenceAsync(traj1);
+                        if (placement == "right" && confidence > 0.93){
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDMIDDLE);
+                        }
+                        else{
+                            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
+                        }
                         currentState = State.DROPLEFT;
                         waitTimer.reset();
                     }
+                    break;
 
                 case DROPLEFT:
                     if(!drive.isBusy()){
@@ -127,38 +132,22 @@ public class RedRightAuto extends LinearOpMode {
                     if(waitTimer.milliseconds() > 1000){
                         drive.robot.getDropperLeftSubsystem().getStateMachine().updateState(DropperLeftStateMachine.State.PICKUP);
                         drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.RETRACT);
-                        currentState = State.TRAJ2;
+                        currentState = State.BACKTOSTART;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ2:
-                    if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj2);
-                        currentState = State.TRAJ3;
+                case BACKTOSTART:
+                    if (waitTimer.milliseconds() > 1000) {
+                        drive.followTrajectorySequenceAsync(traj2);
+                        currentState = State.TOPARK;
                         waitTimer.reset();
                     }
                     break;
 
-                case TRAJ3:
+                case TOPARK:
                     if(!drive.isBusy()){
-                        drive.turn(Math.toRadians(Traj3));
-                        currentState = State.TRAJ4;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ4:
-                    if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj4);
-                        currentState = State.TRAJ5;
-                        waitTimer.reset();
-                    }
-                    break;
-
-                case TRAJ5:
-                    if (!drive.isBusy()) {
-                        drive.followTrajectoryAsync(traj5);
+                        drive.followTrajectorySequenceAsync(traj3);
                         currentState = State.IDLE;
                         waitTimer.reset();
                     }

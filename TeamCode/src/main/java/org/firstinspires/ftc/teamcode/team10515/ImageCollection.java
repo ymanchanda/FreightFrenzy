@@ -4,29 +4,27 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
-
-import org.outoftheboxrobotics.tensorflowapi.ObjectDetection.TFODBuilder;
+import org.outoftheboxrobotics.tensorflowapi.ImageClassification.TFICBuilder;
+import org.outoftheboxrobotics.tensorflowapi.ImageClassification.TensorImageClassifier;
 import org.outoftheboxrobotics.tensorflowapi.ObjectDetection.TensorObjectDetector;
 
 import java.io.IOException;
 import java.util.List;
 
-@TeleOp(name="TFOD Test", group="Test")
-public class TFODTest extends FreightFrenzyRobot {
+@TeleOp(name="Image Collection", group="Collection")
+public class ImageCollection extends FreightFrenzyRobot {
 
     /* Declare OpMode members. */
 
     OpenCvWebcam webcam;
     SamplePipeline pipeline;
-    TensorObjectDetector tfod;
-    List<TensorObjectDetector.Detection> detections;
     boolean ready = false;
 
     @Override
@@ -52,14 +50,6 @@ public class TFODTest extends FreightFrenzyRobot {
             }
         });
 
-        try {
-            tfod = new TFODBuilder(hardwareMap, "converted_model.tflite", "element").build();
-            telemetry.addLine("Successful build of model");
-        } catch (IOException e) {
-            e.printStackTrace();
-            telemetry.addLine("Model build failed");
-        }
-
         /*
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
@@ -79,8 +69,10 @@ public class TFODTest extends FreightFrenzyRobot {
         telemetry.addData("Pipeline time ms", webcam.getPipelineTimeMs());
         telemetry.addData("Overhead time ms", webcam.getOverheadTimeMs());
         telemetry.addData("Theoretical max FPS", webcam.getCurrentPipelineMaxFps());
-        if(ready) {
-            telemetry.addLine("Size of list: " + detections.size());
+        if(ready){
+            telemetry.addData("Zoom: ", webcam.getPtzControl().getZoom());
+            telemetry.addData("Max zoom: ", webcam.getPtzControl().getMaxZoom());
+            telemetry.addData("Min zoom: ", webcam.getPtzControl().getMinZoom());
         }
 
         if (getEnhancedGamepad1().isA()){
@@ -94,20 +86,8 @@ public class TFODTest extends FreightFrenzyRobot {
         }
         else if (getEnhancedGamepad1().isY()){
             telemetry.addLine("Y Pressed");
-            ready = true;
-//            detections = tfod.recognize(pipeline.getMat());
-            detections = tfod.recognize(pipeline.getFirstMat()); //TODO: Try this line
-//            telemetry.addLine("Size of list: " + detections.size());
-//            telemetry.addLine("Left most coordinate of bounding box: " + detections.get(0).getLocation().left);
-//            telemetry.addLine("Confidence: " + detections.get(0).getConfidence());
-//            while(!getEnhancedGamepad1().isB()){
-//                telemetry.addLine("Press B to continue");
-//                telemetry.update();
-//            }
-
         }
         telemetry.update();
-//            sleep(100);
     }
 
     class SamplePipeline extends OpenCvPipeline {
@@ -118,19 +98,17 @@ public class TFODTest extends FreightFrenzyRobot {
          * It will be returned by getMat()
          */
         Mat mat = new Mat();
-        Mat firstMat = new Mat();
-        boolean done = false;
+        int num = 0;
 
         @Override
         public Mat processFrame(Mat input) {
+            num++;
             Size dim = new Size(320, 320);
             Imgproc.resize(input, mat, dim);
-//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2BGR); //TODO: Try this line
-            if(!done){
-                done = true;
-                firstMat = mat.clone(); //TODO: Try this line
-//                firstMat = mat;
-                saveMatToDisk(firstMat, "firstMat");
+//            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGBA);
+            if(num % 10 == 0 && num <= 200) {
+                String name = String.format("mat(%d)", num / 10);
+                saveMatToDisk(mat, name);
             }
             return mat;
         }
@@ -149,10 +127,6 @@ public class TFODTest extends FreightFrenzyRobot {
 
         Mat getMat(){
             return mat;
-        }
-
-        Mat getFirstMat(){
-            return firstMat;
         }
     }
 }

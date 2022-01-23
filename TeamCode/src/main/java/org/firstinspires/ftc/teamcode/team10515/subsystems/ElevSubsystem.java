@@ -41,7 +41,9 @@ public class ElevSubsystem implements ISubsystem<ElevStateMachine, ElevStateMach
     @Override
     public void update(double dt) {
         getStateMachine().update(dt);
-        if (getStateMachine().getState().equals(ElevStateMachine.State.EXTEND) && getElevWheels().getCurrentEncoderTicks() <= 2730)
+        if (getStateMachine().getState().equals(ElevStateMachine.State.EXTENDTOP) && getElevWheels().getCurrentEncoderTicks() <= 2730)
+            getElevWheels().setPower(getState().getSpeed());
+        else if (getStateMachine().getState().equals(ElevStateMachine.State.EXTENDMIDDLE) && getElevWheels().getCurrentEncoderTicks() <= 375)
             getElevWheels().setPower(getState().getSpeed());
         else if (getStateMachine().getState().equals(ElevStateMachine.State.RETRACT) && getElevWheels().getCurrentEncoderTicks() >= 50)
             getElevWheels().setPower(getState().getSpeed());

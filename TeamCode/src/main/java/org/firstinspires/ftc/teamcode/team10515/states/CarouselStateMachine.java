@@ -13,7 +13,7 @@ public class CarouselStateMachine extends SimpleState<CarouselStateMachine.State
     }
 
     public enum State implements Namable {
-        IDLE("Idle", 0), BLUE("Blue", 0.475d), RED("Red", -0.475d);
+        IDLE("Idle", 0), BLUE("Blue", 0.525d), RED("Red", -0.525d);
 
         private final String name;
         private double speed;

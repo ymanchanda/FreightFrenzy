@@ -94,12 +94,12 @@ public class FFTeleop extends FreightFrenzyTeleopRobot {
             case DRIVER_CONTROL:
                 drive.setWeightedDrivePower(
                         new Pose2d(
-                                -gamepad1.left_stick_y,
-                                -gamepad1.left_stick_x,
-                                -gamepad1.right_stick_x
+                                -gamepad1.left_stick_y * 1,
+                                -gamepad1.left_stick_x * 0.6,
+                                -gamepad1.right_stick_x * 0.65
                         )
                 );
-
+/*
                 if (getEnhancedGamepad1().isDpadLeftJustPressed()) {
                     // If the A button is pressed on gamepad1, we generate a splineTo()
                     // trajectory on the fly and follow it
@@ -113,6 +113,7 @@ public class FFTeleop extends FreightFrenzyTeleopRobot {
                     currentMode = Mode.AUTOMATIC_CONTROL;
                 }
                 break;
+ */
             case AUTOMATIC_CONTROL:
                 // If x is pressed, we break out of the automatic following
                 if (getEnhancedGamepad1().isyJustPressed()) {
@@ -207,7 +208,7 @@ public class FFTeleop extends FreightFrenzyTeleopRobot {
         }
 
         if(getEnhancedGamepad2().isyJustPressed()){
-            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTEND);
+            drive.robot.getElevSubsystem().getStateMachine().updateState(ElevStateMachine.State.EXTENDTOP);
             stopintake = true;
             liftdown = false;
             telemetry.addLine("y pressed lift down: " + drive.robot.getElevSubsystem().getStateMachine().getState());

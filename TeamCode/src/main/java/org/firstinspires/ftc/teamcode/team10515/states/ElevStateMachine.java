@@ -12,7 +12,8 @@ public class ElevStateMachine extends SimpleState<ElevStateMachine.State> {
 
     public enum State implements Namable {
         IDLE("Idle", 0d),
-        EXTEND("Extend", 0.85d),
+        EXTENDTOP("Extend Top", 0.85d),
+        EXTENDMIDDLE("Extend Middle",0.85d),
         RETRACT("Retract", -0.75d);
 
         private final String name;
