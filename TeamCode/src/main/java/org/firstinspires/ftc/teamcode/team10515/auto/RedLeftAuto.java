@@ -29,13 +29,13 @@ public class RedLeftAuto extends LinearOpMode {
     private static double dt;
     private static TimeProfiler updateRuntime;
 
-    static final Pose2d Traj1 = new Pose2d(-58.5,-60,Math.toRadians(180));
+    static final Pose2d Traj1 = new Pose2d(-59.5,-60,Math.toRadians(180));
     static final double angleForTraj1 = Math.toRadians(-180);
     static final Vector2d Traj2 = new Vector2d(-14,-41.6);
     static final double angleForTraj2 = Math.toRadians(-180);
     static final Vector2d Traj3 = new Vector2d(-28, -60);
     static final double angleForTraj3 = Math.toRadians(-180);
-    static final Pose2d Traj4 = new Pose2d(-58,-38,Math.toRadians(0));
+    static final Pose2d Traj4 = new Pose2d(-58,-36,Math.toRadians(0));
     static final double angleForTraj4 = Math.toRadians(-180);
 
 
@@ -82,6 +82,7 @@ public class RedLeftAuto extends LinearOpMode {
         //Spin carousel
 
         TrajectorySequence traj2 = drive.trajectorySequenceBuilder(traj1.end())
+                .waitSeconds(3)
                 .lineTo(Traj2)
                 .build();
 

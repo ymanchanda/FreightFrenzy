@@ -28,8 +28,8 @@ public class BlueLeftAuto extends LinearOpMode {
     static final double angleForTraj1 = Math.toRadians(-90);
     static final Pose2d Traj2 = new Pose2d(-6,55, Math.toRadians(0));
     static final double angleForTraj2 = Math.toRadians(180);
-    static final Vector2d Traj3 = new Vector2d(0,67.5);
-    static final Vector2d Traj4 = new Vector2d(49, 67.5);
+    static final Vector2d Traj3 = new Vector2d(0,69.5);
+    static final Vector2d Traj4 = new Vector2d(49, 69.5);
 
     //ElapsedTime carouselTime = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime waitTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -64,6 +64,7 @@ public class BlueLeftAuto extends LinearOpMode {
         drive.robot.getIntakeMotorSubsystem().getStateMachine().updateState(IntakeStateMachine.State.IDLE);
 
         TrajectorySequence traj1 = drive.trajectorySequenceBuilder(startPose)
+                .waitSeconds(3)
                 .splineTo(Traj1, angleForTraj1)
                 .build();
 
